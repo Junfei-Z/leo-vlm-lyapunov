@@ -216,7 +216,6 @@ If you use this code or data, please cite the accompanying paper (preprint):
 @article{vlm_leo_lyapunov,
   title   = {Online Collaborative VLM Inference over Solar-Powered LEO Satellite
              Networks via Robust Lyapunov Optimization},
-  author  = {Zhan, Junfei and He, Tengjiao},
   year    = {2025},
   note    = {Preprint}
 }
