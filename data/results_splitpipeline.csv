@@ -1,0 +1,6 @@
+policy,peak_violations,downtime_slots,uptime_pct,service_rate,split_tasks,min_fill,mean_fill,total_quality
+Lyapunov (ours),0,0,100.0,0.5098,1100,0.2313,0.2331,2378.35
+Greedy-Q,0,2438,96.44,0.5453,0,0.1969,0.2562,2614.61
+Greedy-E,0,0,100.0,0.7825,0,0.1768,0.2346,2394.6
+Random,0,0,100.0,0.7843,0,0.2981,0.3016,3061.46
+MaxBatt-7B,0,0,100.0,0.7825,0,0.277,0.3676,3751.54
