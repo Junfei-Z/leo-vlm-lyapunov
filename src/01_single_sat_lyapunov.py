@@ -24,8 +24,12 @@ measurements on EuroSAT (224x224), Q4 quantization:
 Author: (your project)
 """
 
+import os, sys
 import numpy as np
 import matplotlib.pyplot as plt
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from figstyle import apply_house_style, savefig_pub, PALETTE
+apply_house_style()
 
 # =============================================================================
 # 1. TIME SCALES  (the three-layer separation: tau << T_topo << eclipse)
@@ -290,6 +294,7 @@ def plot_timeseries(res, fname="sim_timeseries.png"):
         a.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(fname, dpi=130)
+    savefig_pub(fig, os.path.splitext(fname)[0] + ".pdf")
     print(f"saved {fname}")
     plt.close(fig)
 
@@ -313,6 +318,7 @@ def plot_V_tradeoff(Vs, fname="sim_V_tradeoff.png"):
     ax1.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(fname, dpi=130)
+    savefig_pub(fig, os.path.splitext(fname)[0] + ".pdf")
     print(f"saved {fname}")
     plt.close(fig)
 

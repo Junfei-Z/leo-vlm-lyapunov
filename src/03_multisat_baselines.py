@@ -23,8 +23,12 @@ Solar model (paper Eq. 17, NOT a terrestrial weather HMM):
 Calibration (T_im, E_im, Ppeak_im, Q_im) = REAL Jetson Orin NX / EuroSAT 224px / Q4.
 """
 
+import os, sys
 import numpy as np
 import matplotlib.pyplot as plt
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from figstyle import apply_house_style, savefig_pub, PALETTE
+apply_house_style()
 
 # ---------------- time scales ----------------
 TAU = 1.0
@@ -308,7 +312,7 @@ def compare_all():
 
 def plot_comparison(results, fname="multisat_comparison.png"):
     names = list(results.keys())
-    colors = ["tab:blue", "tab:red", "tab:green", "tab:orange", "tab:purple"]
+    colors = [PALETTE["blue_main"], PALETTE["red_strong"], "tab:green", "tab:orange", "tab:purple"]
     fig, ax = plt.subplots(2, 2, figsize=(13, 9))
 
     # (a) downtime
@@ -345,6 +349,7 @@ def plot_comparison(results, fname="multisat_comparison.png"):
         a.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(fname, dpi=130)
+    savefig_pub(fig, os.path.splitext(fname)[0] + ".pdf")
     print(f"saved {fname}")
     plt.close(fig)
 
