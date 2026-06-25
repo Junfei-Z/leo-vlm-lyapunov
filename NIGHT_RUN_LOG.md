@@ -46,4 +46,26 @@ Calibration (`data/jetson_calibration.csv`, real Jetson Orin NX / EuroSAT / Q4):
 
 ## Progress log
 
-- [in progress] Track A: drafting Performance Evaluation from the real results above.
+- [DONE] Track A: Performance Evaluation written from real results (calibration
+  table, single-sat validation w/ Theorem 1/2/3 evidence, multi-sat + split
+  comparison table, honest quality trade-off + peak-power caveat). 5 figures
+  restyled to figures4papers house style and exported as vector PDF. Pushed to
+  Overleaf (commit live) and GitHub. Conclusion already existed and is complete;
+  left as-is (adding results there would break section discipline).
+- [DONE] Track B / EXP-1: offline MILP optimality-gap curve (`src/05_milp_gap.py`,
+  `data/results_milp_gap.csv`, `milp_gap.pdf`).
+  - Setup: S=2 sats, I=2 sources, 48-slot scaled orbit; 3B/7B configs; PuLP+CBC.
+    12 randomized instances (eclipse phase, init battery, solar noise), each solved
+    to **proven optimum** (mean U* = 7.20). Online swept over V in [1..1000].
+  - Result (mean over 12 instances): online min-quality / U* rises 0.46 -> 0.86;
+    normalized gap falls 0.54 (V=1) -> 0.14 (V=500); 0 peak violations at all V.
+  - Surprise / honesty: gap does NOT go to 0 — it plateaus ~0.14. The single-trace
+    run was also slightly non-monotone at V=1000 (myopic over-commit). Averaging over
+    instances smoothed it; the residual floor is the price of a causal scheduler vs a
+    clairvoyant optimum over a short horizon. Reported as such; large-V follows O(1/V).
+    Did NOT fake convergence to 0.
+  - Updated belief: Theorem 2's O(1/V) trend holds empirically as a monotone gap
+    shrinkage; the absolute gap floor is horizon/myopia-limited, worth a one-line
+    caveat in the paper (added). Written into EVAL as subsection "Optimality Gap
+    Against the Offline Benchmark" + Fig. milp_gap. Pushed to Overleaf + GitHub.
+- [in progress] EXP-6 systematic sensitivity analysis (honest boundary map).
