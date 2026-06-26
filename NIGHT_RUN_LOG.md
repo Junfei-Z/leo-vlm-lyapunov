@@ -159,3 +159,17 @@ numbers; risky/subjective calls go to OPEN_QUESTIONS.md, not auto-applied.
   new bench data lands).
 - EVAL must open with a dedicated Baselines subsection (introduce once, before any comparison fig).
 - Every figure ships with its data CSV + a standalone plot script (user hand-tunes figures).
+
+## Iter 2 — 6-config calibration + Pareto figure (W3) — bench finished early
+- DID: all 3 Jetson benches finished (gemma-3-4b / Qwen2-VL-2B / SmolVLM2). All passed the
+  no-collapse check (8–9 distinct answers). Synced to data/jetson_eurosat/. Built
+  `src/build_calibration.py` → `data/jetson_eurosat/calibration_all.csv` (all 8 runs, N_im,
+  Pareto flags) and `src/plot_tradeoff.py` → `figures/quality_energy_tradeoff.{pdf,png}`
+  (data + standalone plot kept separate, per the figure-reproducibility rule).
+- NUMBERS (acc / E_J): Qwen2-VL-2B 0.418/2.82, SmolVLM2 0.338/5.90, Qwen2.5-VL-3B 0.30/5.4,
+  Gemma3-4B 0.342/41.0, Qwen2.5-VL-7B 0.47/27.9, InternVL3-8B 0.51/62.8.
+- FOUND: Pareto frontier = {Qwen2-VL-2B, 7B, 8B}; 3B/SmolVLM2/Gemma3-4B are dominated;
+  Qwen2-VL-2B beats the paper's current cheap anchor (3B) on BOTH accuracy and energy.
+  → OPEN_QUESTIONS Q4. Did NOT edit Table 1 or re-run sims (changes calibrated cost rows).
+- NEXT: W2 — Static rename + Baselines subsection + EVAL reading-guide in main.tex (Overleaf),
+  none of which depends on the Table 1 decision.

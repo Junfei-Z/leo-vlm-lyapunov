@@ -39,3 +39,33 @@ The quality advantage only appears at 8/16 satellites (Fig 10). The win at 4 sat
 **Question:** keep 4-sat as headline (honest, but reviewers anchor on the table), or promote
 an 8-sat scenario to the headline where the method also wins on quality?
 This changes the story's framing → left for you. (Raised earlier in conversation.)
+
+## Q4 — [MED] New bench data: Qwen2-VL-2B Pareto-dominates the 3B; which configs go in Table 1?
+
+All 6 configs benchmarked on EuroSAT (see `data/jetson_eurosat/calibration_all.csv`,
+`figures/quality_energy_tradeoff.pdf`). Surprise result:
+
+| Config | Q | E (J) | note |
+|---|---|---|---|
+| **Qwen2-VL-2B** | **0.418** | **2.82** | Pareto — cheapest AND more accurate than 3B/4B |
+| Qwen2.5-VL-7B | 0.470 | 27.9 | Pareto |
+| InternVL3-8B | 0.510 | 62.8 | Pareto |
+| Qwen2.5-VL-3B | 0.300 | 5.4 | dominated by 2B |
+| SmolVLM2-2.2B | 0.338 | 5.9 | dominated by 2B |
+| Gemma3-4B | 0.342 | 41.0 | dominated (slow: 11.3 s/img) |
+| InternVL3-1B(×2) | 0.10 | — | failed (collapsed to one class) |
+
+**Implication:** the Pareto frontier (the scheduler's *useful* action space) is exactly
+**{Qwen2-VL-2B, Qwen2.5-VL-7B, InternVL3-8B}**. The current paper Table 1 uses
+{Qwen2.5-VL-3B, 7B, 8B} — i.e. its cheap anchor (3B) is now Pareto-dominated by Qwen2-VL-2B.
+
+**Options (NOT auto-applied — changes the calibrated numbers driving every sim):**
+- (A) Replace 3B → Qwen2-VL-2B in Table 1 (3 clean Pareto points; strongest curve). Requires
+  re-running all sims with the new cost row. Recommended if you want the tightest story.
+- (B) Keep 3B/7B/8B as-is (already simulated; conservative).
+- (C) Show all 6 in a calibration figure (quality_energy_tradeoff.pdf) but drive the sim with
+  the 3 Pareto points — lets you *use* the dominated points to motivate "why a scheduler must
+  avoid bad configs".
+**I did NOT touch Table 1 or re-run sims.** The night run will keep the existing 3B/7B/8B sim
+results intact and leave this swap for you. Note: the non-monotonic Q-vs-size (2B > 3B > 4B on
+accuracy) slightly complicates any "bigger = better" wording in the text.
