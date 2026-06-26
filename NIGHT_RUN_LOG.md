@@ -68,4 +68,62 @@ Calibration (`data/jetson_calibration.csv`, real Jetson Orin NX / EuroSAT / Q4):
     shrinkage; the absolute gap floor is horizon/myopia-limited, worth a one-line
     caveat in the paper (added). Written into EVAL as subsection "Optimality Gap
     Against the Offline Benchmark" + Fig. milp_gap. Pushed to Overleaf + GitHub.
-- [in progress] EXP-6 systematic sensitivity analysis (honest boundary map).
+- [DONE] EXP-6 systematic sensitivity analysis (`src/06_sensitivity.py`, `data/sens_*.csv`,
+  `sensitivity_safety.pdf`, `sensitivity_quality.pdf`).
+  - Parameterized, FAITHFUL port of src/04 with a reproduction guardrail: at default
+    params it asserts ours blackout=0/split=1100/totQ=2378.4 and Greedy-Q blackout=2438.
+    Guardrail printed "REPRODUCTION OK" — the port did not drift.
+  - 7 one-at-a-time sweeps x 5 policies: n_sat, arrival_prob, B_max, P_solar, P_cap,
+    sunlit_fraction, n_sources. Every point of every policy recorded honestly.
+  - Honest boundary (the deliverable):
+    * Invariant safety: ours = 0 blackout at EVERY swept point; baselines black out
+      14k-24k slots under tight battery / low solar / severe eclipse / heavy load.
+    * Peak shield is decisive only when the cap binds: at P_cap 8-10 W (< 7B 10.7 W,
+      8B 11.0 W) Greedy-Q/Random/MaxBatt violate 16k-32k times; ours & Greedy-E = 0.
+    * Advantage regime: many sats (8/16 -> ours leads min-fill 0.315/0.371 AND totQ
+      3226/3915), and overload (ours protects worst source 0.066 vs ~0.001 for greedy).
+    * Trade-off regime (reported plainly): few sats / light load / abundant resources
+      -> baselines reach higher throughput; ours' safety margin not needed there.
+- [DONE] EXP-7 eclipse stress (`src/07_eclipse_stress.py`, supports Theorem 3).
+  Queues bounded across eclipse fraction 0.20-0.60 (0 viol, 0 blackout); Lyapunov
+  backlog grows monotonically, fast-growth onset ~0.5 eclipse. Soft margin, no hard cliff.
+- [DONE] EXP-8 long-horizon stability (`src/08_longhorizon.py`, supports Theorem 1).
+  20 orbits: Q^E/T -> 3.7e-4, Q^P/T = 0 (mean-rate stable); Q^U/T plateaus ~5.7e-3
+  because default load is mildly quality-overloaded (at the Slater boundary). Reported honestly.
+- [DONE] EXP-3 dynamic ISL (`src/09_dynamic_isl.py`, supports C1 / Eq.16).
+  Time-varying link duty cycle p_ISL: splits fall 1100 (p=1.0) -> 461 (p=0.3), so
+  Eq.16 genuinely binds. Reroute to standalone keeps throughput, min-fill, and 0
+  blackout intact (cost paid as fewer 8B inferences, not lost throughput). p=1.0
+  reproduces the all-connected split count (internal check).
+
+---
+
+## Final state @ handoff (morning)
+
+DELIVERED:
+- Overleaf main.tex: Performance Evaluation fully written (Calibration, Setup,
+  Single-Sat Validation, Optimality Gap vs MILP, Multi-Sat + Split comparison,
+  Dynamic ISL, Sensitivity Analysis, Stability Stress Tests). 8 figures + 2 tables,
+  all from REAL runs on this machine. Conclusion was already complete (left as-is).
+- main.tex COMPILES CLEANLY locally (latexmk/pdflatex, MacTeX 2026): 17 pages,
+  ZERO undefined references/citations, no multiply-defined labels (5 cosmetic
+  overfull hboxes only).
+- All code + CSV results + PDF/PNG figures committed and pushed to GitHub.
+- Each section/experiment was committed and pushed as its own milestone.
+
+NEEDS YOUR MANUAL FOLLOW-UP (require the Jetson — cannot run on this machine):
+- EXP-4 (RESISC45 second dataset): rerun measurement/profile_jetson.py on RESISC45.
+  C4 in the intro PROMISES EuroSAT + RESISC45; only EuroSAT is measured so far.
+- EXP-5 (quantization sweep per model): profile each VLM at additional quant levels
+  (Q2_K/Q4_K_M/Q8_0) to widen the config set; intro promises "multiple quantization".
+  NOTE: until EXP-4/5 are done, the C4 sentence slightly over-promises vs the current
+  evaluation — consider softening C4 or adding these two Jetson runs.
+
+NOT ATTEMPTED (lower priority / time; not blocking):
+- EXP-2 (offline ILP deployment stage y_sm): configs still hand-placed.
+- EXP-9 (per-slot runtime/scalability plot): quick, supports the "lightweight" claim.
+- EXP-10/11 (activation-compression, cislunar): paper future-work hooks only.
+
+REPRODUCE EVERYTHING: each src/0X_*.py is one command from the repo root, fixed seed.
+EXP-1 needs PuLP (installed). All figures use src/figstyle.py (figures4papers style),
+exported as vector PDF.
