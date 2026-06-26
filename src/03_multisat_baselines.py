@@ -173,7 +173,7 @@ POLICIES = {
     "Greedy-Q":        choose_greedy_q,
     "Greedy-E":        choose_greedy_e,
     "Random":          choose_random,
-    "MaxBatt-7B":      choose_maxbatt_fixed,
+    "Static":      choose_maxbatt_fixed,
 }
 
 

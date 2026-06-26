@@ -2,6 +2,26 @@
 
 Items the overnight run will NOT decide autonomously. Review in the morning.
 
+## Q5 — [ACTION] Apply staged main.tex to Overleaf + figure sync (one morning step)
+
+W2 text edits are DONE and verified but **not yet pushed to Overleaf** — the MCP only does
+full-file `write_file` to a server-side mirror, which I judged too risky to overwrite + push
+unattended on the live doc. The complete, verified file is staged at **`paper_staging/main.tex`**
+(diff: `paper_staging/W2_eval_restructure.diff`). Changes: reading-guide paragraph, new
+`\subsection{Baselines}` (all 4 incl. Static), MaxBatt-7B→Static, metrics sentence kept.
+**To apply (with me, in the morning):** `mcp__overleaf__write_file(main.tex, <staged content>)`
+→ `read_file` verify → `push_changes`, then a compile check.
+
+Two sync gaps to resolve when applying:
+- **Figures aren't in the Overleaf project** (MCP `list_files` shows only `main.tex`). How do
+  your figure PDFs reach the Overleaf compile — manual upload? a separate sync? I renamed the
+  baseline label to "Static" in `src/02–06` but the figure legends (Fig 7/9/10:
+  splitpipeline_comparison, sensitivity_safety/quality) still show the old name until the PDFs
+  are regenerated AND uploaded. I can regenerate the PDFs locally; uploading is your side.
+- **Stray file**: my mirror probe left `_probe_night.txt` in the Overleaf mirror (NOT pushed,
+  so not live). The MCP has no delete — remove it via the Overleaf UI before/after the push,
+  or ignore (it's an empty placeholder).
+
 ## Q1 — [HIGH] C4 describes models/datasets that were never run
 
 **Contribution C4** (Intro) claims empirical validation:

@@ -194,7 +194,7 @@ POLICIES = {
     "Greedy-Q":        choose_greedy_q,
     "Greedy-E":        choose_greedy_e,
     "Random":          choose_random,
-    "MaxBatt-7B":      choose_maxbatt_7b,
+    "Static":      choose_maxbatt_7b,
 }
 
 
@@ -351,7 +351,7 @@ def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
     midx = METRICS.index(metric)
     colors = {"Lyapunov (ours)": PALETTE["blue_main"], "Greedy-Q": PALETTE["red_strong"],
               "Greedy-E": PALETTE["green_3"], "Random": PALETTE["neutral"],
-              "MaxBatt-7B": PALETTE["highlight"]}
+              "Static": PALETTE["highlight"]}
     fig, axes = plt.subplots(2, 4, figsize=(20, 9))
     for ax, (tag, field, values) in zip(axes.flat, SWEEPS):
         rows = all_data[tag]

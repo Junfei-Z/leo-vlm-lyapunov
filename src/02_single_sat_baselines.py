@@ -12,7 +12,7 @@ Schedulers:
   2. Greedy-Q              : always pick the highest-quality config (8B). No safety.
   3. Greedy-E              : always pick the cheapest config (3B). No quality push.
   4. Random                : pick a random feasible config.
-  5. Fixed-7B              : always the middle config.
+  5. Static              : always the middle config.
 
 Baselines 2-5 still cannot physically draw more energy than the battery holds
 (a task that would drain b<0 is dropped), and we COUNT peak-power-cap violations
@@ -153,7 +153,7 @@ POLICIES = {
     "Greedy-Q":        choose_greedy_q,
     "Greedy-E":        choose_greedy_e,
     "Random":          choose_random,
-    "Fixed-7B":        choose_fixed7b,
+    "Static":        choose_fixed7b,
 }
 
 

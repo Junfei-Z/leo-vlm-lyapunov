@@ -190,3 +190,24 @@ numbers; risky/subjective calls go to OPEN_QUESTIONS.md, not auto-applied.
   subsection (Greedy-Q/Greedy-E/Random/Static, each: pick rule + ignored constraint +
   pathology) before first comparison fig; (4) add EVAL reading-guide paragraph (3 modes);
   (5) rename in code + re-run 03/04/06 to refresh legends; (6) compile-check; commit.
+
+## Iter 3 — W2 text restructure (STAGED, not yet pushed to Overleaf)
+- DID: verified my 2h-old main.tex snapshot is byte-identical to the live Overleaf file.
+  Built the EVAL text edits with an asserted Python script (`/tmp/edit_maintex.py`) and
+  inspected the full diff:
+    (a) reading-guide paragraph after the EVAL intro (3 modes: compare / validate / stress-test);
+    (b) pulled the baseline descriptions out of Simulation Setup into a new `\subsection{Baselines}`
+        before the first comparison, describing Greedy-Q / Greedy-E / Random / Static (pick rule +
+        ignored constraint + pathology); kept the 5-metrics sentence in Simulation Setup;
+    (c) MaxBatt-7B → Static everywhere (5 prose/table/caption spots).
+  Sanity: \end{document} present, figures 12→12, subsections 33→34, braces balanced, 0 MaxBatt-7B.
+- WHY STAGED not pushed: overleaf MCP only does full-file write_file to a SERVER-SIDE mirror
+  (probe file not findable locally); reproducing 93KB exactly through context is error-prone,
+  and overwriting+pushing the live doc unattended (no compile check) is the night's riskiest op.
+  Verified file staged at `paper_staging/main.tex` (+ `W2_eval_restructure.diff`). One morning
+  step to apply (OPEN_QUESTIONS Q5). write_file does NOT auto-push, so nothing is live yet.
+- ALSO: renamed MaxBatt-7B/Fixed-7B → Static in src/02,03,04,06 (code, safe). Figure legends
+  (Fig 7/9/10) still show old name until PDFs regenerated — and figures aren't in the Overleaf
+  project (MCP shows only main.tex), so upload is user-side. Flagged in Q5.
+- NEXT: regenerate Fig 7/9/10 PDFs with the Static legend (run src/04, src/06); then W4 prose
+  tightening (academic-writing) + W5 weak-figure fixes (Fig 5 redundant, Fig 4 needs baseline).
