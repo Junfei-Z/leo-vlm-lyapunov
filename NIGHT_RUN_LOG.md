@@ -173,3 +173,20 @@ numbers; risky/subjective calls go to OPEN_QUESTIONS.md, not auto-applied.
   → OPEN_QUESTIONS Q4. Did NOT edit Table 1 or re-run sims (changes calibrated cost rows).
 - NEXT: W2 — Static rename + Baselines subsection + EVAL reading-guide in main.tex (Overleaf),
   none of which depends on the Table 1 decision.
+
+## Prep for W2 (rename sites located, for next iteration)
+- Paper (Overleaf snapshot lines): MaxBatt-7B at ~1036 (4-baseline intro sentence), ~1077,
+  ~1079, ~1096 (tab_split row), ~1125, ~1129. Rename all "MaxBatt-7B" -> "Static".
+- Code: `Fixed-7B` in src/02 (lines 15,141,156); `MaxBatt-7B` in src/03 (155,176),
+  src/04 (216,232), src/06 (181,197,354 incl. PALETTE color key). Rename label strings ->
+  "Static"; sims are fast + fixed-seed so re-run 03/04/06 to refresh figure legends
+  (Fig 7 splitpipeline_comparison, Fig 9/10 sensitivity_*). NO numbers change — label only.
+- OVERLEAF EDIT POLICY (decided): editing main.tex via overleaf MCP IS authorized (user
+  explicit + Overleaf keeps its own version history = reversible). Proceed conservatively:
+  do the mechanical Static rename first (user explicitly approved), then draft the new
+  Baselines subsection + reading-guide; log every overleaf write_file/push in this file.
+- W2 plan order: (1) read current main.tex setup/EVAL region via overleaf MCP to get exact
+  strings; (2) rename MaxBatt-7B->Static in prose+table+captions; (3) insert Baselines
+  subsection (Greedy-Q/Greedy-E/Random/Static, each: pick rule + ignored constraint +
+  pathology) before first comparison fig; (4) add EVAL reading-guide paragraph (3 modes);
+  (5) rename in code + re-run 03/04/06 to refresh legends; (6) compile-check; commit.
