@@ -127,3 +127,35 @@ NOT ATTEMPTED (lower priority / time; not blocking):
 REPRODUCE EVERYTHING: each src/0X_*.py is one command from the repo root, fixed seed.
 EXP-1 needs PuLP (installed). All figures use src/figstyle.py (figures4papers style),
 exported as vector PDF.
+
+---
+
+# Session 2 — 2026-06-27 (night/paper-polish branch)
+
+Goal shift: from "fill EVAL with real numbers" to "drive paper to submission-ready +
+make experiments→claims traceable + readable". Iron rules unchanged: no fabricated
+numbers; risky/subjective calls go to OPEN_QUESTIONS.md, not auto-applied.
+
+## Iter 1 — claim↔evidence matrix + open questions (W1)
+- DID: extracted C1–C4 from Intro; built `claim_evidence_matrix.md` mapping every
+  contribution/sub-claim to its figure/table/theorem; ran orphan-figure + naked-claim checks.
+- WHY: the matrix is the spine that tells the rest of the restructure what each figure is for.
+- FOUND:
+  - **C4 mismatch (HIGH)**: C4 says "RESISC45 + ViT-B/16…ViT-G/14", actual = Qwen2.5-VL/
+    InternVL3 on EuroSAT only. → OPEN_QUESTIONS Q1 (NOT auto-edited; changes paper scope).
+  - Fig 5 near-orphan: duplicates Fig 6's O(1/V) with a far weaker visual → merge/demote candidate.
+  - 4-sat headline unflattering on quality → OPEN_QUESTIONS Q3.
+- NEXT: W2 — draft up-front "Baselines" subsection (Greedy-Q/Greedy-E/Random/Static),
+  rename MaxBatt-7B/Fixed-7B → Static throughout main.tex, add EVAL reading-guide paragraph.
+
+## Pending background (not blocking)
+- Jetson bench of gemma-3-4b / Qwen2-VL-2B / SmolVLM2 running; 6-config Table 1 + quality–
+  energy Pareto deferred to W3 until `data/jetson_eurosat/results_*_summary.csv` land.
+  gemma-4b smoke test PASSED (4 distinct answers, not collapsed like InternVL3-1B).
+
+## Decisions locked (from user, this session)
+- 4 baselines, consistent wherever a comparison is shown: Greedy-Q / Greedy-E / Random / **Static**.
+- "Static" replaces MaxBatt-7B / Fixed-7B (config-agnostic; the fixed config may change once
+  new bench data lands).
+- EVAL must open with a dedicated Baselines subsection (introduce once, before any comparison fig).
+- Every figure ships with its data CSV + a standalone plot script (user hand-tunes figures).

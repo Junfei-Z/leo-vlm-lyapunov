@@ -1,0 +1,2 @@
+model,n_images,accuracy,T_im_mean_s,T_im_p50_s,E_im_mean_J,Ppeak_p95_W
+Qwen2.5-VL-7B-Q4,500,0.47,3.8872892680168154,3.915417432785034,27.902277617550332,10.718

@@ -1,0 +1,2 @@
+model,n_images,accuracy,T_im_mean_s,T_im_p50_s,E_im_mean_J,Ppeak_p95_W
+InternVL3-8B-Q4,500,0.51,8.662328167438506,8.621918797492981,62.781095399502156,11.022
