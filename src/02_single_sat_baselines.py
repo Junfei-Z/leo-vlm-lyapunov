@@ -59,7 +59,8 @@ CONFIG_NAMES = list(CONFIGS.keys())
 #     eclipse DRAINS THE BATTERY TO ZERO and is forced to drop tasks. The proposed
 #     scheduler throttles to cheaper configs as the energy queue Q^E grows, surviving
 #     eclipse while still delivering quality when solar is available.
-P_CAP   = 12.0
+P_CAP   = 15.0
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
 P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 6000.0          # small battery -> eclipse is genuinely hard
 B_INIT  = 0.6 * B_MAX
@@ -92,7 +93,7 @@ def choose_lyapunov(pending, b, omega, QE, QP, QU, V, rng):
     for i in pending:
         for mname in CONFIG_NAMES:
             m = CONFIGS[mname]
-            if m["Ppeak"] > P_CAP:                          # HARD peak-power
+            if P_BASE + m["Ppeak"] > P_CAP:                          # HARD peak-power
                 continue
             if not feasible_by_energy(mname, b, omega):     # HARD battery
                 continue
@@ -218,7 +219,7 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
             p_t = run_P
 
         # peak-power violation = exceeding the target power budget P_CAP
-        if p_t > P_CAP + 1e-9:
+        if P_BASE + p_t > P_CAP + 1e-9:
             pcap_violations += 1
 
         # battery dynamics; if it hits zero, trigger a blackout/recovery window
@@ -236,7 +237,7 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
 
         # virtual queues (used by Lyapunov; harmless for others)
         QE = max(QE + e_t - omega, 0.0)
-        QP = max(QP + p_t - P_CAP, 0.0)
+        QP = max(QP + (P_BASE + p_t) - P_CAP, 0.0)
         QU = np.maximum(QU + arrivals * U_TGT - q_t, 0.0)
 
         log["t"].append(t); log["battery"].append(b)

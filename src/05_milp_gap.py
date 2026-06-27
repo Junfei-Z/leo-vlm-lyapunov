@@ -45,7 +45,8 @@ S_SATS         = 2
 I_SRC          = 2
 SAT_PHASE      = [0, ORBIT // 2]       # staggered eclipse
 P_SOLAR        = 8.0                   # J harvested per sunlit slot
-P_CAP          = 12.0
+P_CAP          = 15.0
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
 B_MAX          = 150.0
 B_INIT         = 100.0
 U_TGT          = 0.50                  # per-slot quality demand (keeps sources hungry)
@@ -124,7 +125,7 @@ def solve_offline(inst):
             e_st = pulp.lpSum(x[s, tp, m, i] * CFG[m]["e_ps"] for (m, i, tp) in occ)
             prob += b[s, t + 1] == b[s, t] + om[s, t] - e_st
             # per-slot peak-power cap
-            prob += pulp.lpSum(x[s, tp, m, i] * CFG[m]["P"] for (m, i, tp) in occ) <= P_CAP
+            prob += pulp.lpSum(x[s, tp, m, i] * CFG[m]["P"] for (m, i, tp) in occ) <= P_CAP - P_BASE
 
     # max-min: U <= total delivered quality to every source
     for i in range(I_SRC):
@@ -159,7 +160,7 @@ def run_online(V, inst):
         for s in free:
             for m in MODELS:
                 c = CFG[m]
-                if c["P"] > P_CAP:
+                if P_BASE + c["P"] > P_CAP:
                     continue
                 if c["e_ps"] > b[s] + om[s]:        # battery feasibility
                     continue
@@ -182,13 +183,13 @@ def run_online(V, inst):
         for s in range(S_SATS):
             if t <= busy_until[s]:
                 e_t[s] = run_e[s]; p_t[s] = run_p[s]
-            if p_t[s] > P_CAP + 1e-9:
+            if P_BASE + p_t[s] > P_CAP + 1e-9:
                 pcap_viol += 1
         for s in range(S_SATS):
             b[s] = min(max(0.0, b[s] + om[s] - e_t[s]), B_MAX)
 
         QE = np.maximum(QE + e_t - om, 0.0)
-        QP = np.maximum(QP + p_t - P_CAP, 0.0)
+        QP = np.maximum(QP + (P_BASE + p_t) - P_CAP, 0.0)
         QU = np.maximum(QU + U_TGT - q_credit, 0.0)
 
     return dict(min_quality=float(delivered.min()),

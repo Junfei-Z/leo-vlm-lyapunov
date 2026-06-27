@@ -63,7 +63,8 @@ ETA_PANEL = 0.30          # space-grade GaAs efficiency ~30%
 ETA_SIGMA = 0.02          # small Gaussian perturbation on efficiency (attitude/aging)
 
 # ---------------- power / battery ----------------
-P_CAP   = 12.0
+P_CAP   = 15.0
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
 B_MAX   = 4000.0          # smaller battery -> eclipse is genuinely hard
 B_INIT  = 0.6 * B_MAX
 
@@ -106,7 +107,7 @@ def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng):
         for i in pending:
             for mname in CONFIG_NAMES:
                 m = CONFIGS[mname]
-                if m["Ppeak"] > P_CAP:                       # HARD peak-power
+                if P_BASE + m["Ppeak"] > P_CAP:                       # HARD peak-power
                     continue
                 if not _energy_feasible(mname, b[s], omega[s]):  # HARD battery
                     continue
@@ -249,7 +250,7 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
             if t <= busy_until[s] and t > blackout_until[s]:
                 e_t[s] = run_E_ps[s]
                 p_t[s] = run_P[s]
-            if p_t[s] > P_CAP + 1e-9:
+            if P_BASE + p_t[s] > P_CAP + 1e-9:
                 pcap_violations += 1
 
         # battery update + blackout trigger
@@ -265,7 +266,7 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
 
         # queue updates
         QE = np.maximum(QE + e_t - omega, 0.0)
-        QP = np.maximum(QP + p_t - P_CAP, 0.0)
+        QP = np.maximum(QP + (P_BASE + p_t) - P_CAP, 0.0)
         # quality deficit queue (paper Eq.30): demand from arrivals minus delivered credit
         QU = np.maximum(QU + arrivals * U_TGT - q_credit, 0.0)
 

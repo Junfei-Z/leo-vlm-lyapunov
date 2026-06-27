@@ -42,6 +42,7 @@ for m in CONFIGS.values():
 CONFIG_NAMES = list(CONFIGS.keys())
 
 P_CAP   = 15.0
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
 P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 30000.0
 B_INIT  = 0.6 * B_MAX
@@ -99,7 +100,7 @@ def run_longhorizon(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
                     m = CONFIGS[mname]
                     e_per_slot = m["E"] / m["N"]
                     p_peak = m["Ppeak"]
-                    if p_peak > P_CAP:
+                    if P_BASE + p_peak > P_CAP:
                         continue
                     if e_per_slot > b + omega:
                         continue
@@ -122,13 +123,13 @@ def run_longhorizon(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
             e_t = running_E_per_slot
             p_t = running_P
 
-        if p_t > P_CAP + 1e-9:
+        if P_BASE + p_t > P_CAP + 1e-9:
             pcap_violations += 1
 
         b = min(max(b + omega - e_t, 0.0), B_MAX)
 
         QE = max(QE + e_t - omega, 0.0)
-        QP = max(QP + p_t - P_CAP, 0.0)
+        QP = max(QP + (P_BASE + p_t) - P_CAP, 0.0)
         QU = np.maximum(QU + arrivals * U_TGT - q_t, 0.0)
 
         # sample Q(T)/T (use instantaneous backlog over elapsed time T = t+1)

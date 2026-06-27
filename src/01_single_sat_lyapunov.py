@@ -63,6 +63,7 @@ CONFIG_NAMES = list(CONFIGS.keys())
 #    Chosen so that eclipse creates real pressure but the system survives.
 # =============================================================================
 P_CAP   = 15.0     # instantaneous power cap [W]  (above 8B's 11W -> binding-ish)
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
 P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 30000.0  # battery capacity [J]  (enough to ride through an eclipse)
 B_INIT  = 0.6 * B_MAX
@@ -157,7 +158,7 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
 
                     # ---- HARD constraints (must hold every slot) ----
                     # peak power cap:
-                    if p_peak > P_CAP:
+                    if P_BASE + p_peak > P_CAP:
                         continue
                     # battery feasibility (this slot's energy <= available):
                     if e_per_slot > b + omega:
@@ -195,7 +196,7 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
             p_t = running_P
 
         # ---- HARD peak-power check (safety; should never trigger) ----
-        if p_t > P_CAP + 1e-9:
+        if P_BASE + p_t > P_CAP + 1e-9:
             pcap_viol = 1
             pcap_violations += 1
 
@@ -206,7 +207,7 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
         # energy queue: Q^E(t+1) = max(Q^E + e - omega, 0)
         QE = max(QE + e_t - omega, 0.0)
         # power queue: Q^P(t+1) = max(Q^P + p - Pcap, 0)
-        QP = max(QP + p_t - P_CAP, 0.0)
+        QP = max(QP + (P_BASE + p_t) - P_CAP, 0.0)
         # quality queue per source: Q^U_i = max(Q^U_i + a_i*U_tgt - q_i, 0)
         QU = np.maximum(QU + arrivals * U_TGT - q_t, 0.0)
 
