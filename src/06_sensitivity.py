@@ -359,18 +359,24 @@ def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
               "Greedy-E": PALETTE["green_3"], "Random": PALETTE["neutral"],
               "Static": PALETTE["highlight"]}
     fig, axes = plt.subplots(2, 4, figsize=(20, 9))
-    for ax, (tag, field, values) in zip(axes.flat, SWEEPS):
+    from matplotlib.ticker import ScalarFormatter, NullFormatter
+    for k, (ax, (tag, field, values)) in enumerate(zip(axes.flat, SWEEPS)):
         rows = all_data[tag]
         for pol in POLICIES:
             xs, ys = _series(rows, pol, midx)
             lab = "ours" if pol == "Lyapunov (ours)" else pol
-            ax.plot(xs, ys, "o-", color=colors[pol], lw=2.2, ms=6,
-                    label=lab, alpha=0.9 if pol == "Lyapunov (ours)" else 0.75)
-        ax.set_xlabel(titles[tag]); ax.set_title(titles[tag])
+            ax.plot(xs, ys, "o-", color=colors[pol], lw=2.4, ms=7,
+                    label=lab, alpha=0.95 if pol == "Lyapunov (ours)" else 0.8)
+        ax.set_xlabel(titles[tag])
+        ax.set_title("(%s)" % chr(ord("a") + k), loc="left", fontsize=13)
         if logy:
             ax.set_yscale("symlog")
         if tag in ("nsat", "nsrc", "battery"):
             ax.set_xscale("log")
+            ax.set_xticks(values)
+            ax.xaxis.set_major_formatter(ScalarFormatter())
+            ax.xaxis.set_minor_formatter(NullFormatter())
+            ax.tick_params(axis="x", which="minor", length=0)
     axes.flat[0].set_ylabel(ylabel); axes.flat[4].set_ylabel(ylabel)
     axes.flat[3].legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
     fig.suptitle(f"Sensitivity of {ylabel} across eight scenario parameters", y=1.00)
