@@ -68,6 +68,7 @@ class Params:
     P_solar: float = 2.0
     P_cap: float = 12.0
     sunlit_fraction: float = 0.60
+    U_tgt: float = 0.30
 
     @property
     def n_sunlit(self):
@@ -267,7 +268,7 @@ def run_sim(policy_fn, prm, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
 
         QE = np.maximum(QE + e_t - omega, 0.0)
         QP = np.maximum(QP + p_t - prm.P_cap, 0.0)
-        QU = np.maximum(QU + arrivals * U_TGT - q_credit, 0.0)
+        QU = np.maximum(QU + arrivals * prm.U_tgt - q_credit, 0.0)
 
     fill = delivered / np.maximum(1, arrivals_count)
     service_rate = tasks_started / max(1, arrivals_count.sum())
@@ -308,10 +309,11 @@ SWEEPS = [
     ("nsat",    "n_sat",           [2, 4, 8, 16]),
     ("arrival", "arrival_prob",    [0.02, 0.05, 0.10, 0.20, 0.40, 0.70]),
     ("battery", "B_max",           [1000, 2000, 3000, 5000, 8000, 12000]),
-    ("solar",   "P_solar",         [4, 6, 8, 10, 14]),
+    ("panel",   "P_solar",         [1.0, 1.5, 2.0, 3.0, 5.0, 8.0]),  # panel size (harvest power); 2.0=default
     ("pcap",    "P_cap",           [4.0, 4.5, 5.0, 5.5, 6.0, 8.0]),  # RESISC45 draws 4.15/4.51/5.57W; bind below ~5.6W
     ("sunlit",  "sunlit_fraction", [0.45, 0.50, 0.55, 0.60, 0.70, 0.80]),
     ("nsrc",    "n_sources",       [2, 4, 6, 10, 16]),
+    ("qdemand", "U_tgt",         [0.1, 0.2, 0.3, 0.4, 0.5]),
 ]
 METRICS = ["pcap_violations", "blackout_slots", "service_rate", "split_tasks",
            "min_fill", "total_quality"]
@@ -349,8 +351,8 @@ def _series(rows, policy, metric_idx):
 
 def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
     titles = {"nsat": "satellites", "arrival": "arrival prob.", "battery": "battery $B_{\\max}$ (J)",
-              "solar": "solar power (W)", "pcap": "peak cap (W)", "sunlit": "sunlit fraction",
-              "nsrc": "sources"}
+              "panel": "solar panel power (W)", "pcap": "peak cap (W)", "sunlit": "sunlit fraction",
+              "nsrc": "sources", "qdemand": "quality demand $U_{tgt}$"}
     midx = METRICS.index(metric)
     colors = {"Lyapunov (ours)": PALETTE["blue_main"], "Greedy-Q": PALETTE["red_strong"],
               "Greedy-E": PALETTE["green_3"], "Random": PALETTE["neutral"],
@@ -369,9 +371,8 @@ def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
         if tag in ("nsat", "nsrc", "battery"):
             ax.set_xscale("log")
     axes.flat[0].set_ylabel(ylabel); axes.flat[4].set_ylabel(ylabel)
-    axes.flat[-1].axis("off")
     axes.flat[3].legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
-    fig.suptitle(f"Sensitivity of {ylabel} across seven scenario parameters", y=1.00)
+    fig.suptitle(f"Sensitivity of {ylabel} across eight scenario parameters", y=1.00)
     savefig_pub(fig, fname)
     fig.savefig(os.path.splitext(fname)[0] + ".png", dpi=130)
     print(f"  saved {fname}")
