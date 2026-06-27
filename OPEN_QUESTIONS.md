@@ -2,7 +2,30 @@
 
 Items the overnight run will NOT decide autonomously. Review in the morning.
 
-## Q6 — [IMPORTANT] RESISC45 configs weaken two headline claims; reframe needed
+## Q6 — [RESOLVED — direction set by user] smaller default solar panel + panel-size sweep
+
+USER DECISION: instead of pure reframing, make the DEFAULT scenario energy-tight by using a
+smaller solar panel (inference is a secondary/opportunistic load on a small sensing satellite),
+and add solar-panel SIZE as a new sensitivity sweep (mirrors the exemplar paper's panel-size L
+sweep). The existing P_solar sweep folds into the panel-size sweep (same physical lever).
+
+INTEGRITY GUARDRAIL (must follow): pick the default panel by PRINCIPLE, not by result — set the
+default so one orbit's solar harvest ≈ one orbit's inference demand (the energy-balanced operating
+point where scheduling matters). Then run and REPORT HONESTLY what happens:
+- if baselines black out at this justified-tight default -> safety headline restored honestly;
+- if they still don't -> cheap VLMs aren't energy-bound on a realistic sat -> fall back to the
+  reframing (move the blackout claim to the sensitivity section). Either outcome is reported as-is.
+Sensitivity must still show the FULL panel-size range (including the slack large-panel regime) for
+transparency — this is what proves it isn't parameter fishing.
+
+IMPLEMENTATION (loop): parameterize solar by panel area (harvest ∝ area); set default small via the
+energy-balance rule (compute orbital inference demand, set harvest to match); re-run Fig4-12; replace
+the P_solar sweep with a panel-size sweep; record in NIGHT_RUN_LOG whether baselines blackout at the
+new default. The peak-shield thinness (old Q6 item 2) is separate — still flag/handle per below.
+
+### (original problem, for record)
+
+### (superseded reframe-only writeup) Q6 — [IMPORTANT] RESISC45 configs weaken two headline claims; reframe needed
 
 After re-running the sims with the RESISC45 8GB-satellite configs, two headline stories are
 materially weaker (the data is honest; the old framing was tuned to the expensive 8B numbers):
