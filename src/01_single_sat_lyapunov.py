@@ -92,7 +92,7 @@ def sunlit_indicator(t):
     return 1 if phase < N_SUNLIT else 0
 
 
-def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
+def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False, greedy=False):
     rng = np.random.default_rng(seed)
 
     # --- state ---
@@ -177,8 +177,19 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
                         best_score = score
                         best_choice = (i, mname)
 
+            # Greedy-Q baseline: always run the highest-quality feasible config,
+            # ignoring energy sustainability (no drift-plus-penalty, no idle gate).
+            if greedy:
+                feas = [mn for mn in CONFIG_NAMES
+                        if P_BASE + CONFIGS[mn]["Ppeak"] <= P_CAP
+                        and CONFIGS[mn]["E"] / CONFIGS[mn]["N"] <= b + omega]
+                best_choice = (pending[0], max(feas, key=lambda k: CONFIGS[k]["Q"])) \
+                    if (pending and feas) else None
+                do_commit = best_choice is not None
+            else:
+                do_commit = (best_choice is not None) and (best_score < 0)
             # also consider doing NOTHING (idle) -> score 0
-            if (best_choice is not None) and (best_score < 0):
+            if do_commit:
                 i, mname = best_choice
                 m = CONFIGS[mname]
                 chosen = (i, mname)
@@ -247,8 +258,9 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
 # =============================================================================
 # 5. PLOTS  (the evidence for queue stability + eclipse robustness)
 # =============================================================================
-def plot_timeseries(res, fname="sim_timeseries.png"):
+def plot_timeseries(res, res_gq=None, fname="sim_timeseries.png"):
     log = res["log"]
+    gq = res_gq["log"] if res_gq is not None else None
     t = np.array(log["t"]) * TAU / 60.0   # minutes
     delta = np.array(log["delta"])
 
@@ -268,15 +280,21 @@ def plot_timeseries(res, fname="sim_timeseries.png"):
 
     # (a) battery
     shade(ax[0])
-    ax[0].plot(t, np.array(log["battery"]) / 1000.0, color="tab:green")
+    ax[0].plot(t, np.array(log["battery"]) / 1000.0, color=PALETTE["blue_main"], lw=2.0, label="Proposed")
+    if gq is not None:
+        ax[0].plot(t, np.array(gq["battery"]) / 1000.0, color=PALETTE["red_strong"], lw=2.0, ls="--", label="Greedy-Q")
+        ax[0].legend(loc="lower right", fontsize=11)
     ax[0].set_ylabel("Battery [kJ]")
     ax[0].set_title("(a) Battery level  (shaded = eclipse)")
 
     # (b) energy virtual queue
     shade(ax[1])
-    ax[1].plot(t, log["QE"], color="tab:red")
+    ax[1].plot(t, log["QE"], color=PALETTE["blue_main"], lw=2.0, label="Proposed")
+    if gq is not None:
+        ax[1].plot(t, gq["QE"], color=PALETTE["red_strong"], lw=2.0, ls="--", label="Greedy-Q")
+        ax[1].legend(loc="upper left", fontsize=11)
     ax[1].set_ylabel(r"$Q^E(t)$")
-    ax[1].set_title("(b) Energy virtual queue  (rises in eclipse, recovers in sunlight)")
+    ax[1].set_title("(b) Energy virtual queue: Proposed stays bounded; Greedy-Q runs a large backlog")
 
     # (c) power virtual queue + peak power
     shade(ax[2])
@@ -348,6 +366,7 @@ if __name__ == "__main__":
           f"{res['min_quality_rate']:.3f} / {res['mean_quality_rate']:.3f}")
     print("-" * 64)
 
-    plot_timeseries(res)
+    res_gq = run_sim(V=V_DEFAULT, greedy=True)   # Greedy-Q baseline for the Fig-4 overlay
+    plot_timeseries(res, res_gq)
     plot_V_tradeoff([5, 10, 20, 50, 100, 200])
     print("Done.")
