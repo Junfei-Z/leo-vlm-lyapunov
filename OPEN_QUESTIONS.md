@@ -95,7 +95,18 @@ the sims/action space. Also note: RESISC45 energy numbers differ ~4× from the o
 (bench_generic did not lock power mode/clocks); they are internally consistent so usable, but
 absolute energy is setup-specific — worth re-confirming the measurement setup before finalizing.
 
-## Q5 — [ACTION] Apply staged main.tex to Overleaf + figure sync (one morning step)
+## Q5 — [RESOLVED] Overleaf push IS possible via the local git clone (text + figures)
+
+CORRECTION to my earlier "can't push figures" claim: there is a working Overleaf git clone at
+`~/Documents/trae_projects/overleaf-leo-work` (remote git.overleaf.com/69d8..., auth token embedded,
+`git fetch` works, currently `behind 1`). It contains main.tex + all figure PDFs. So I CAN push
+text AND figures: `git pull` to sync -> edit main.tex directly (no MCP, no 93KB reproduction) ->
+copy new figure PDFs in -> `git commit && git push`. This is how the previous night run pushed.
+PLAN: do the push as the FINAL step once (a) the restyled figures are regenerated, (b) the new
+EVALUATION + Table 1 are integrated into main.tex, (c) Q6 reframings are settled (user said pushing
+a [Q6?]-marked draft for review is fine). NOT pushed yet — changes still in progress.
+
+### (superseded) original Q5: Apply staged main.tex to Overleaf
 
 W2 text edits are DONE and verified but **not yet pushed to Overleaf** — the MCP only does
 full-file `write_file` to a server-side mirror, which I judged too risky to overwrite + push
