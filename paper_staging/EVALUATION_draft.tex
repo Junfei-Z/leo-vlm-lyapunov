@@ -1,0 +1,98 @@
+% ============================================================================
+% EVALUATION — restructured draft (RESISC45 / 8GB-satellite model)
+% Night-run draft. Numbers from data/jetson_resisc45/ + regenerated sim CSVs.
+% Markers [Q6?] flag reframings that depend on OPEN_QUESTIONS Q6 (user's call).
+% Not yet merged into main.tex / Overleaf.
+% ============================================================================
+\section{Performance Evaluation}\label{EVAL}
+
+We evaluate the framework in three signposted parts so the reader can place each
+figure. We first \emph{compare} the proposed scheduler against four baselines on the
+constellation, isolating where it leads and where it only trades off. We then
+\emph{validate} the theoretical guarantees against a certified offline optimum and the
+stability conditions. We finally \emph{stress-test} robustness under intermittent
+inter-satellite links and varying eclipse. A comparison figure always shows all four
+baselines; a validation or stress-test figure reports the proposed scheduler against the
+relevant theoretical reference.
+
+\subsection{Hardware Calibration and the Quality--Energy Landscape}\label{EV_CALIB}
+We profile per-configuration inference cost on an NVIDIA Jetson Orin NX (16\,GB, JetPack~6,
+\texttt{llama.cpp} CUDA backend, \texttt{Q4\_K\_M} weights). The task is 45-class
+remote-sensing scene classification on RESISC45~\cite{Cheng2017RESISC45}. Latency is timed
+per image; power is sampled every 50\,ms with \texttt{tegrastats}; energy integrates power
+over the inference window; the peak bound $\hat{P}_{im}^{\text{CP}}$ is the 95th percentile.
+
+We profiled seven vision-language models spanning four families and 2--8B parameters. Two
+findings drive the rest of the evaluation. First, accuracy is \emph{not} monotone in model
+size: Qwen2-VL-2B (0.398) exceeds Qwen2.5-VL-3B at the EuroSAT scale and several 4B models,
+because architecture and model generation matter as much as parameter count
+(Fig.~\ref{fig:tradeoff}). A configuration's quality therefore cannot be predicted from its
+size and must be measured; the scheduler reasons over the measured operating points, and its
+action set is the Pareto-efficient subset of profiled configurations
+(Table~\ref{tab_calib}). Second, the deployment target is not the 16\,GB profiling host but a
+typical sensing satellite with an $\sim$8\,GB edge module whose memory is shared with the
+on-board detection pipeline and I/O, leaving only a few gigabytes for inference. Under this
+budget any configuration of 4B parameters or more cannot run standalone and must be split
+across two satellites; the highest-quality reachable model, Qwen2.5-VL-7B, is exactly such a
+split-only configuration. This is what makes the two-stage pipeline necessary rather than
+optional.
+
+\begin{table}[!t]
+\centering\small
+\caption{\label{tab_calib}Measured per-configuration cost on Jetson Orin NX (RESISC45,
+\texttt{Q4\_K\_M}). The scheduler's action set is the Pareto-efficient subset; the 7B tier is
+split-only under the 8\,GB satellite budget. $N_{im}$ is the number of $\tau{=}1$\,s slots.}
+\begin{tabular}{lccccc}
+\toprule
+Config & $Q_{im}$ & $\mathbb{E}[T_{im}]$(s) & $\mathbb{E}[E_{im}]$(J) & $\hat{P}_{im}^{\text{CP}}$(W) & $N_{im}$ \\
+\midrule
+Qwen2-VL-2B   & 0.398 & 1.24 & 3.93 & 4.15 & 2 \\
+Qwen2.5-VL-3B & 0.464 & 1.74 & 5.78 & 4.51 & 2 \\
+Qwen2.5-VL-7B & 0.573 & 2.76 & 9.13 & 5.57 & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Benchmark Solutions}\label{EV_BASE}
+We compare the proposed scheduler against four online baselines, each relaxing one or more of
+the four structural constraints so that the comparison isolates the value of respecting them.
+Greedy-Q always selects the highest-quality standalone configuration; it ignores energy
+sustainability, so under tight resources it drains the eclipse-side battery, and because it
+omits the peak-power check it can exceed the instantaneous cap. Greedy-E always selects the
+cheapest configuration; it stays energy-safe but never reaches the higher-quality tiers.
+Random selects a feasible standalone configuration uniformly at random, an uninformed lower
+bound. Static routes to the highest-battery satellite and runs a single fixed standalone
+configuration, the natural non-adaptive heuristic; because it never splits, it is capped
+below the top quality tier. None of the four can orchestrate the two-satellite split, so all
+are limited to standalone configurations and cannot run the 7B tier.
+
+We treat the offline MILP solely as a clairvoyant upper bound for the optimality-gap study
+(Section~\ref{EV_GAP}), not as a competing policy: it is non-causal, requiring full future
+knowledge of solar arrivals, channels, and eclipse, so comparing it on equal footing with
+causal online schedulers would be unfair. It is moreover intractable at constellation scale,
+which is why we solve it only on a small certified-optimal instance.
+
+% --------------------------------------------------------------------------
+% §D Simulation Results — drafted with NEW RESISC45 numbers. [Q6?] = reframing
+% pending user confirmation (OPEN_QUESTIONS Q6).
+% --------------------------------------------------------------------------
+\subsection{Multi-Satellite Comparison}\label{EV_MULTI}
+On the four-satellite constellation with the split pipeline (Table~\ref{tab_split},
+Fig.~\ref{fig:split}) the proposed scheduler is the only policy that runs the 7B tier,
+executing 3755 inferences as a two-satellite split; the four baselines are structurally
+capped at the 3B standalone tier. % [Q6?] At this default operating point the RESISC45
+% configurations are inexpensive, so no policy blacks out here; the sustainability advantage
+% is therefore reported where it binds, under tightened resources, in Section~\ref{EV_SENS}.
+Cumulative quality is an honest trade-off rather than a blanket win: energy-aware baselines
+reach higher raw throughput by running a cheap fixed configuration at full duty, whereas the
+proposed scheduler spends part of its budget on the expensive 7B split and optimizes the
+max-min objective. % numbers: ours totQ=3388, split=3755; Static/Greedy-Q totQ=3703.
+
+% [Q6?] Peak-power shield: present as a by-construction guarantee that binds under a tight
+% cap (Section~\ref{EV_SENS} shows baselines violating ~16k times once the cap drops below
+% the 5.57W draw of the configs), rather than a headline empirical win, since the RESISC45
+% peak draws are low and close together. CONFIRM framing with user (Q6).
+
+% TODO (post-Q6): EV_SINGLE (Fig4 + Greedy-Q overlay), EV_GAP (Fig6, absorb Fig5),
+% EV_SENS (Fig9/10, 2x4), EV_ISL (Fig8), EV_STAB (Fig11/12). Fill numbers from regenerated
+% sim CSVs once figures are restyled.

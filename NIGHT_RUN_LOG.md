@@ -314,3 +314,17 @@ PAPER note: calibration measured on 16GB Orin NX; simulated satellite = 8GB shar
      "only one that runs the top 7B model via split (3755 splits) + advantage under tighter regimes."
 - NEXT: regenerate Fig4-12 + restyle line figures (figstyle line helpers); draft EVALUATION text.
   Figures currently regenerated with OLD house style + NEW data; restyle pending.
+
+## EVALUATION draft started (paper_staging/EVALUATION_draft.tex)
+- DID: drafted §A reading-guide, §B calibration+Pareto-non-monotonicity (new RESISC45 Table 1:
+  2B/3B/7B), §C Benchmark Solutions + MILP upper-bound caveat, §D EV_MULTI opening. Q6-dependent
+  reframings (no-blackout-at-default -> moved to sensitivity; peak-shield -> by-construction) are
+  written as commented [Q6?] notes, NOT committed as final prose.
+- WHY draft over figure-restyle: figures can't reach Overleaf without the user's git URL anyway
+  (MCP can't push binaries; clone not on local FS), and the user hand-tunes figures. The text draft
+  captures the new story for the user to review on return; higher value now.
+- PENDING USER (most remaining work depends on these): (1) Overleaf git URL to push text+figures,
+  or confirm manual upload; (2) Q6 narrative reframing decision; (3) figure hand-tuning.
+- NEXT (if continuing autonomously): restyle line figures per-figure (markers only for discrete
+  sweeps, not continuous time-series); fill §D numbers from regenerated CSVs. Lower priority until
+  user returns.
