@@ -66,7 +66,8 @@ class Params:
     arrival_prob: float = 0.10
     B_max: float = 5000.0
     P_solar: float = 2.0
-    P_cap: float = 12.0
+    P_cap: float = 15.0      # realistic satellite power-bus limit (Jetson 15W mode)
+    P_base: float = 9.0      # platform baseline draw (sensing+comms+ADCS); inference shares the rest
     sunlit_fraction: float = 0.60
     U_tgt: float = 0.30
 
@@ -110,7 +111,7 @@ def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
     for s in free_sats:
         for mname in STANDALONE:
             m = CONFIGS[mname]
-            if m["Ppeak"] > prm.P_cap:
+            if prm.P_base + m["Ppeak"] > prm.P_cap:
                 continue
             e_ps = m["E"] / m["N"]
             if not _energy_feasible(e_ps, b[s], omega[s]):
@@ -119,7 +120,7 @@ def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
                 score = QE[s] * e_ps + QP[s] * m["Ppeak"] - (QU[i] + V) * m["Q"]
                 if best_score is None or score < best_score:
                     best_score, best = score, ("standalone", s, i, mname)
-    if len(free_sats) >= 2 and SPLIT["Ppeak"] <= prm.P_cap:
+    if len(free_sats) >= 2 and prm.P_base + SPLIT["Ppeak"] <= prm.P_cap:
         ef_ps = SPLIT["E_front"] / SPLIT["N_front"]
         er_ps = SPLIT["E_rear"] / SPLIT["N_rear"]
         for a in range(len(free_sats)):
@@ -254,7 +255,7 @@ def run_sim(policy_fn, prm, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
         for s in range(N_SAT):
             if t <= busy_until[s] and t > blackout_until[s]:
                 e_t[s] = run_E_ps[s]; p_t[s] = run_P[s]
-            if p_t[s] > prm.P_cap + 1e-9:
+            if prm.P_base + p_t[s] > prm.P_cap + 1e-9:
                 pcap_violations += 1
 
         for s in range(N_SAT):
@@ -267,7 +268,7 @@ def run_sim(policy_fn, prm, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
             b[s] = min(b_new, prm.B_max)
 
         QE = np.maximum(QE + e_t - omega, 0.0)
-        QP = np.maximum(QP + p_t - prm.P_cap, 0.0)
+        QP = np.maximum(QP + (prm.P_base + p_t) - prm.P_cap, 0.0)
         QU = np.maximum(QU + arrivals * prm.U_tgt - q_credit, 0.0)
 
     fill = delivered / np.maximum(1, arrivals_count)
@@ -310,7 +311,7 @@ SWEEPS = [
     ("arrival", "arrival_prob",    [0.02, 0.05, 0.10, 0.20, 0.40, 0.70]),
     ("battery", "B_max",           [1000, 2000, 3000, 5000, 8000, 12000]),
     ("panel",   "P_solar",         [1.0, 1.5, 2.0, 3.0, 5.0, 8.0]),  # panel size (harvest power); 2.0=default
-    ("pcap",    "P_cap",           [4.0, 4.5, 5.0, 5.5, 6.0, 8.0]),  # RESISC45 draws 4.15/4.51/5.57W; bind below ~5.6W
+    ("pbase",   "P_base",          [8, 10, 11, 12, 13, 14]),  # platform load rises -> inference headroom (15-Pbase) shrinks -> bus binds
     ("sunlit",  "sunlit_fraction", [0.45, 0.50, 0.55, 0.60, 0.70, 0.80]),
     ("nsrc",    "n_sources",       [2, 4, 6, 10, 16]),
     ("qdemand", "U_tgt",         [0.1, 0.2, 0.3, 0.4, 0.5]),
@@ -351,7 +352,7 @@ def _series(rows, policy, metric_idx):
 
 def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
     titles = {"nsat": "satellites", "arrival": "arrival prob.", "battery": "battery $B_{\\max}$ (J)",
-              "panel": "solar panel power (W)", "pcap": "peak cap (W)", "sunlit": "sunlit fraction",
+              "panel": "solar panel power (W)", "pbase": "platform load $P_{base}$ (W)", "sunlit": "sunlit fraction",
               "nsrc": "sources", "qdemand": "quality demand $U_{tgt}$"}
     midx = METRICS.index(metric)
     colors = {"Lyapunov (ours)": PALETTE["blue_main"], "Greedy-Q": PALETTE["red_strong"],

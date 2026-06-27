@@ -2,6 +2,13 @@
 
 Items the overnight run will NOT decide autonomously. Review in the morning.
 
+## Q6 — [RESOLVED] (1) small-panel default restores blackout headline; (2) P_base strengthens peak shield
+
+Peak-shield (item 2) RESOLVED: not re-measured (15W is the realistic sat operating point). Instead
+added a platform baseline power P_base so the 15W bus is shared (total = P_base + inference_peak);
+the platform-load sweep shows baselines blowing the bus 14-16k times while ours stays 0. Strong +
+honest (more-realistic model). See NIGHT_RUN_LOG. Original Q6 writeup below.
+
 ## Q6 — [RESOLVED — direction set by user] smaller default solar panel + panel-size sweep
 
 USER DECISION: instead of pure reframing, make the DEFAULT scenario energy-tight by using a

@@ -86,7 +86,8 @@ ETA_PANEL = 0.30
 ETA_SIGMA = 0.02
 
 # ---------------- power / battery ----------------
-P_CAP   = 12.0
+P_CAP   = 15.0     # realistic satellite power-bus limit (Jetson 15W mode)
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); inference shares the rest
 B_MAX   = 5000.0
 B_INIT  = 0.6 * B_MAX
 
@@ -137,7 +138,7 @@ def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t):
     for s in free_sats:
         for mname in STANDALONE:
             m = CONFIGS[mname]
-            if m["Ppeak"] > P_CAP:
+            if P_BASE + m["Ppeak"] > P_CAP:
                 continue
             e_ps = m["E"] / m["N"]
             if not _energy_feasible(e_ps, b[s], omega[s]):
@@ -151,7 +152,7 @@ def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t):
     if len(free_sats) >= 2:
         ef_ps = SPLIT["E_front"] / SPLIT["N_front"]
         er_ps = SPLIT["E_rear"] / SPLIT["N_rear"]
-        if SPLIT["Ppeak"] <= P_CAP:
+        if P_BASE + SPLIT["Ppeak"] <= P_CAP:
             for a in range(len(free_sats)):
                 for c in range(len(free_sats)):
                     if a == c:
@@ -316,7 +317,7 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
             if t <= busy_until[s] and t > blackout_until[s]:
                 e_t[s] = run_E_ps[s]
                 p_t[s] = run_P[s]
-            if p_t[s] > P_CAP + 1e-9:
+            if P_BASE + p_t[s] > P_CAP + 1e-9:
                 pcap_violations += 1
 
         for s in range(N_SAT):
@@ -329,7 +330,7 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
             b[s] = min(b_new, B_MAX)
 
         QE = np.maximum(QE + e_t - omega, 0.0)
-        QP = np.maximum(QP + p_t - P_CAP, 0.0)
+        QP = np.maximum(QP + (P_BASE + p_t) - P_CAP, 0.0)
         QU = np.maximum(QU + arrivals * U_TGT - q_credit, 0.0)
 
         log["t"].append(t)
