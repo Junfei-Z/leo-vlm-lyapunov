@@ -2,6 +2,53 @@
 
 Items the overnight run will NOT decide autonomously. Review in the morning.
 
+## Q0 — [CRITICAL / BLOCKS THE SIM RE-RUN] RESISC45 breaks the split-pipeline premise
+
+The RESISC45 re-bench (all 7 models, improved prompt, `data/jetson_resisc45/`,
+`figures/quality_energy_tradeoff_RESISC45.pdf`) fixed the "2B too good" problem — the ranking is
+now sensible — but it broke the paper's CORE premise a different way:
+
+| config | RESISC45 acc | E (J) | Pareto? |
+|---|---|---|---|
+| Qwen2.5-VL-7B | **0.573** | 9.1 | ✅ best |
+| InternVL2.5-4B | 0.558 | 9.4 | dominated |
+| **InternVL3-8B** | **0.544** | 14.8 | **dominated** |
+| Qwen2.5-VL-3B | 0.464 | 5.8 | ✅ |
+| gemma-3-4b | 0.513 | 37.1 | dominated |
+| Qwen2-VL-2B | 0.398 | 3.9 | ✅ |
+| SmolVLM2-2.2B | 0.327 | 5.3 | dominated |
+
+**Pareto frontier = {Qwen2-VL-2B, Qwen2.5-VL-3B, Qwen2.5-VL-7B}** — ALL fit on one satellite.
+**InternVL3-8B is Pareto-dominated**: Qwen2.5-VL-7B beats it on BOTH accuracy (0.573>0.544) and
+energy (9.1<14.8). Verified it is NOT a parsing/prompt artifact (8B: 97% parsed, 47 distinct
+answers, sensible outputs) — InternVL3-8B is genuinely a bit worse than Qwen2.5-VL-7B here.
+
+**Why this is fatal for the current framing:** the split pipeline exists to run "the largest model,
+which does not fit on one satellite." But (a) the best model now is 7B, which fits standalone, and
+(b) the 8B is neither best nor too big — InternVL3-8B-Q4 is ~5 GB and already ran standalone in
+16 GB. So no model is simultaneously top-quality AND too big → a rational scheduler never splits.
+(Note: the "8B doesn't fit in 16 GB" claim was already thin even on EuroSAT.)
+
+**I did NOT re-run the sims** — proceeding with action space {2B,3B,7B} would silently gut the
+split-pipeline contribution (C1). Options (need your call):
+- **(A) Add a genuinely large top model (recommended, principled).** Scale up the current winner's
+  family — Qwen2.5-VL-32B or -72B (Q4 ~18–40 GB) — which would be the most accurate AND genuinely
+  exceed one Orin's 16 GB → must split. Caveat: with a single Jetson you can't run it standalone;
+  you'd measure accuracy via CPU/RAM offload (slow) and cost via the two-stage split estimate.
+  Needs a big download (network was flaky tonight — several ssh timeouts) + a slow run.
+- **(B) Re-motivate the split (lighter).** Frame the split around peak-power halving / load
+  balancing / latency across two satellites under a tight power cap, rather than "doesn't fit."
+  Keeps the current models; rewrites C1's framing.
+- **(C) Reposition the paper** away from "enabling the largest VLM" toward energy-aware eclipse
+  scheduling; de-emphasize the split pipeline. Largest change.
+
+**My recommendation: (A)** if you can spare the download + slow run (most honest, keeps the
+contribution); **(B)** as the fast fallback if you want to avoid more Jetson work. Until you decide,
+the autonomous run will do only non-blocked work (figure-style retrofit, text drafts) and NOT touch
+the sims/action space. Also note: RESISC45 energy numbers differ ~4× from the old EuroSAT ones
+(bench_generic did not lock power mode/clocks); they are internally consistent so usable, but
+absolute energy is setup-specific — worth re-confirming the measurement setup before finalizing.
+
 ## Q5 — [ACTION] Apply staged main.tex to Overleaf + figure sync (one morning step)
 
 W2 text edits are DONE and verified but **not yet pushed to Overleaf** — the MCP only does

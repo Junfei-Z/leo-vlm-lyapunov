@@ -255,3 +255,18 @@ AFTER re-run: rebuild calibration_all.csv + Pareto from RESISC45 numbers, then d
 PUSH STATUS: user authorized pushing to Overleaf, but MCP only does whole-file overwrite of a
   server-side mirror (can't reproduce 93KB losslessly by hand); gave user paste-ready blocks for
   the W2 changes instead. Calibration edits deferred to post-RESISC45.
+
+## RESISC45 re-bench DONE — premise problem surfaced (autonomous run HALTED at sim re-run)
+- DID: all 7 RESISC45 results synced to data/jetson_resisc45/; rebuilt calibration_all.csv;
+  re-derived Pareto; plotted figures/quality_energy_tradeoff_RESISC45.pdf.
+- RESULT (acc / E_J): 7B 0.573/9.1, InternVL2.5-4B 0.558/9.4, 8B 0.544/14.8, 3B 0.464/5.8,
+  gemma-4b 0.513/37.1, 2B 0.398/3.9, SmolVLM2 0.327/5.3. Ranking now sensible (2B-anomaly gone).
+- CRITICAL FINDING: Pareto = {2B, 3B, 7B}, all single-satellite. **InternVL3-8B is DOMINATED by
+  Qwen2.5-VL-7B on BOTH acc and energy** (verified not an artifact). The split-pipeline premise
+  ("largest model doesn't fit one satellite") collapses: best model (7B) fits standalone; 8B is
+  neither best nor too big (8B-Q4 ~5GB fits 16GB). → OPEN_QUESTIONS Q0 (CRITICAL).
+- DECISION: per HARD RULES, did NOT re-run sims with {2B,3B,7B} — that would silently gut C1's
+  split-pipeline contribution. Pipeline steps 3-4 (action space + sim re-run) are BLOCKED on the
+  user's Q0 decision (add a 32B+ model / re-motivate split / reposition). Notified the user.
+- NEXT (non-blocked only until Q0 resolved): W5 retrofit existing line figures to figstyle
+  line-plot style; W4 draft EVALUATION restructure text into paper_staging. NO sim re-run.
