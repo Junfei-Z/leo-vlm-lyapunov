@@ -15,8 +15,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from figstyle import apply_house_style, savefig_pub, PALETTE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CSV = os.path.join(HERE, "..", "data", "jetson_eurosat", "calibration_all.csv")
-OUT = os.path.join(HERE, "..", "figures", "quality_energy_tradeoff")
+# Dataset dir name via arg 1 (default RESISC45 if present, else EuroSAT). Output name carries it.
+_dsname = sys.argv[1] if len(sys.argv) > 1 else (
+    "jetson_resisc45" if os.path.isdir(os.path.join(HERE, "..", "data", "jetson_resisc45")) else "jetson_eurosat")
+CSV = os.path.join(HERE, "..", "data", _dsname, "calibration_all.csv")
+_suffix = "_RESISC45" if "resisc" in _dsname else "_EuroSAT"
+OUT = os.path.join(HERE, "..", "figures", "quality_energy_tradeoff" + _suffix)
 
 # short labels for plotting
 SHORT = {
