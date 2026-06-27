@@ -232,3 +232,26 @@ numbers; risky/subjective calls go to OPEN_QUESTIONS.md, not auto-applied.
    `plot_series()`/`POLICY_STYLE` + `finalize_lineplot()` + `savefig_lines()` (big Times New Roman,
    thick lines, distinct per-series markers, PDF+EPS). Verify no text overlap, data not hugging the
    frame, legend not covering curves. Retrofit existing line figures in W5.
+
+## PIVOT — task switch to RESISC45 + improved prompt (user-approved)
+PROBLEM the user raised: on EuroSAT, Qwen2-VL-2B (0.418, 2.82J) nearly matches 8B (0.51) —
+which destroys the paper's premise (high quality needs big models that must be split). Root
+cause: EuroSAT (10-class) is too easy to discriminate model capability; NOT a reason to drop 2B
+(cherry-picking). Fix: harder task that separates models, which ALSO fixes C4 (already claims RESISC45).
+
+DIAGNOSTIC (2B vs 8B, improved prompt, 60 EuroSAT / 90 RESISC45):
+  EuroSAT:  2B 0.467, 8B 0.567  (gap 0.100)
+  RESISC45: 2B 0.378, 8B 0.556  (gap 0.178)  <-- gap widens ~78%; 8B robust to difficulty, 2B degrades.
+  Improved prompt also lifts both (2B 0.418->0.467, 8B 0.51->0.567 on EuroSAT). 45-class numbers
+  (0.38-0.56) read as more credible than 10-class 0.30-0.51.
+DECISION (user): re-run ALL 7 models on RESISC45-450 with the improved prompt. Launched
+  run_resisc.sh (bench_generic.py = energy-measuring bench + improved prompt + robust normalized
+  parsing). ~4h. Monitor armed.
+Also noted: InternVL2.5-4B EuroSAT full = 0.492 acc / 10.2J / 3.40s — beats 7B on BOTH acc and
+  energy (more non-monotonicity evidence).
+AFTER re-run: rebuild calibration_all.csv + Pareto from RESISC45 numbers, then decide action space
+  + whether to re-run sims. The W2 text staging (Static/Baselines/reading-guide) is INDEPENDENT of
+  this and still valid; calibration-narrative + Table 1 edits wait for the RESISC45 numbers.
+PUSH STATUS: user authorized pushing to Overleaf, but MCP only does whole-file overwrite of a
+  server-side mirror (can't reproduce 93KB losslessly by hand); gave user paste-ready blocks for
+  the W2 changes instead. Calibration edits deferred to post-RESISC45.
