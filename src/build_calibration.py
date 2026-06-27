@@ -9,11 +9,15 @@ frontier (maximize accuracy, minimize energy/img).
 Output: data/jetson_eurosat/calibration_all.csv  (the DATA the plot script consumes).
 This script does the data work ONLY; plotting lives in plot_tradeoff.py.
 """
-import glob, math, os
+import glob, math, os, sys
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA = os.path.join(HERE, "..", "data", "jetson_eurosat")
+# Dataset dir: arg 1, else RESISC45 if present, else EuroSAT.
+_default = os.path.join(HERE, "..", "data", "jetson_resisc45")
+if not os.path.isdir(_default):
+    _default = os.path.join(HERE, "..", "data", "jetson_eurosat")
+DATA = sys.argv[1] if len(sys.argv) > 1 else _default
 
 # Friendly family label per config (for the paper / legend)
 FAMILY = {
@@ -21,6 +25,7 @@ FAMILY = {
     "Qwen2.5-VL-7B-Q4": "Qwen2.5-VL", "InternVL3-8B-Q4": "InternVL3",
     "InternVL3-1B-Q8": "InternVL3", "InternVL3-1B-Q8-224": "InternVL3",
     "gemma-3-4b-Q4": "Gemma3", "SmolVLM2-2.2B-Q4": "SmolVLM2",
+    "InternVL2.5-4B-Q4": "InternVL2.5",
 }
 
 def load():
