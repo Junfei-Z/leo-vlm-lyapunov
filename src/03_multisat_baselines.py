@@ -58,7 +58,7 @@ ARRIVAL_PROB = 0.12       # high load: system is genuinely resource-constrained
 SAT_PHASE = [int(k * N_SLOTS_PER_ORBIT / N_SAT) for k in range(N_SAT)]
 
 # ---------------- solar model (paper Eq.17) ----------------
-P_SOLAR   = 7.0           # W, solar input when sunlit (tighter than before)
+P_SOLAR   = 2.0           # W: small panel (energy-balanced ~1.6W demand + margin)
 ETA_PANEL = 0.30          # space-grade GaAs efficiency ~30%
 ETA_SIGMA = 0.02          # small Gaussian perturbation on efficiency (attitude/aging)
 

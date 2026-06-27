@@ -81,7 +81,7 @@ SAT_PHASE = [int(k * N_SLOTS_PER_ORBIT / N_SAT) for k in range(N_SAT)]
 SAT_RAM = 5.0                      # per-sat VLM RAM [GB] (8GB - OS/IO/sensing): fits 2B & 3B, NOT 7B
 
 # ---------------- solar model (paper Eq.17) ----------------
-P_SOLAR   = 8.0
+P_SOLAR   = 2.0           # W: small panel (inference is a secondary load on the sat)
 ETA_PANEL = 0.30
 ETA_SIGMA = 0.02
 

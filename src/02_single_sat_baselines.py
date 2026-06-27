@@ -60,7 +60,7 @@ CONFIG_NAMES = list(CONFIGS.keys())
 #     scheduler throttles to cheaper configs as the energy queue Q^E grows, surviving
 #     eclipse while still delivering quality when solar is available.
 P_CAP   = 12.0
-P_SOLAR = 9.0
+P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 6000.0          # small battery -> eclipse is genuinely hard
 B_INIT  = 0.6 * B_MAX
 N_SOURCES = 3

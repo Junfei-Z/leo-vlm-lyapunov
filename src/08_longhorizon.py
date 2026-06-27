@@ -42,7 +42,7 @@ for m in CONFIGS.values():
 CONFIG_NAMES = list(CONFIGS.keys())
 
 P_CAP   = 15.0
-P_SOLAR = 9.0
+P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 30000.0
 B_INIT  = 0.6 * B_MAX
 

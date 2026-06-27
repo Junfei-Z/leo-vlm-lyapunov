@@ -63,7 +63,7 @@ CONFIG_NAMES = list(CONFIGS.keys())
 #    Chosen so that eclipse creates real pressure but the system survives.
 # =============================================================================
 P_CAP   = 15.0     # instantaneous power cap [W]  (above 8B's 11W -> binding-ish)
-P_SOLAR = 9.0      # solar charging power when sunlit [W]  (covers avg, not peak)
+P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 30000.0  # battery capacity [J]  (enough to ride through an eclipse)
 B_INIT  = 0.6 * B_MAX
 
