@@ -2,7 +2,27 @@
 
 Items the overnight run will NOT decide autonomously. Review in the morning.
 
-## Q0 — [CRITICAL / BLOCKS THE SIM RE-RUN] RESISC45 breaks the split-pipeline premise
+## Q0 — [RESOLVED 2026-06-27] premise restored via realistic 8GB-satellite memory model
+
+USER DECISION: do NOT add a giant model and do NOT drop the split. Instead re-ground the
+**satellite** memory budget at a realistic ~8GB (typical edge Jetson), of which the OS + I/O +
+the on-board sensing/detection task consume a large share, leaving only ~5GB for the VLM. Under
+this budget, **any model ≥4B cannot run standalone on one satellite and must be split across two**.
+This restores the split-pipeline premise honestly AND requires no new model — the Pareto-best
+Qwen2.5-VL-7B becomes the split-only top tier.
+
+ACTION SPACE (RESISC45, 3 configs, mirrors original 2-standalone + 1-split structure):
+- Qwen2-VL-2B   (Q 0.398) — standalone
+- Qwen2.5-VL-3B (Q 0.464) — standalone
+- Qwen2.5-VL-7B (Q 0.573) — **split-only** (≥4B doesn't fit one 8GB satellite w/ sensing overhead)
+Dropped: InternVL3-8B (dominated + unreliable on test HW), InternVL2.5-4B / gemma-4b / SmolVLM2
+(Pareto-dominated). Use RESISC45 numbers from data/jetson_resisc45/calibration_all.csv.
+
+PAPER must distinguish: calibration measured on the 16GB Orin NX (measurement platform) vs the
+SIMULATED satellite assumed at 8GB shared with the sensing task (deployment constraint) → ≥4B splits.
+This UNBLOCKS the sim re-run (pipeline steps 3-4). The old Q0 problem write-up is kept below for record.
+
+### (original problem, for record) RESISC45 breaks the split-pipeline premise
 
 The RESISC45 re-bench (all 7 models, improved prompt, `data/jetson_resisc45/`,
 `figures/quality_energy_tradeoff_RESISC45.pdf`) fixed the "2B too good" problem — the ranking is

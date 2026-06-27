@@ -270,3 +270,23 @@ PUSH STATUS: user authorized pushing to Overleaf, but MCP only does whole-file o
   user's Q0 decision (add a 32B+ model / re-motivate split / reposition). Notified the user.
 - NEXT (non-blocked only until Q0 resolved): W5 retrofit existing line figures to figstyle
   line-plot style; W4 draft EVALUATION restructure text into paper_staging. NO sim re-run.
+
+## Q0 RESOLVED — sim re-run UNBLOCKED (8GB-satellite memory model)
+User decision (see OPEN_QUESTIONS Q0): satellite RAM ~8GB shared with the sensing task ⇒ any
+model ≥4B must be split across two satellites. No new model; the Pareto-best 7B becomes split-only.
+ACTION SPACE (RESISC45 numbers, replaces the EuroSAT 3B/7B/8B CONFIGS in ALL 7 sim files):
+  CONFIGS = {
+    "2B": dict(T=1.24, E=3.93, Ppeak=4.15, Q=0.398),   # Qwen2-VL-2B   — standalone
+    "3B": dict(T=1.74, E=5.78, Ppeak=4.51, Q=0.464),   # Qwen2.5-VL-3B — standalone
+    "7B": dict(T=2.76, E=9.13, Ppeak=5.57, Q=0.573),   # Qwen2.5-VL-7B — SPLIT-only (>=4B)
+  }   # N=ceil(T/TAU): 2B->2, 3B->2, 7B->3
+MEMORY MODEL change: wherever the sim says "per-sat RAM admits 3B and 7B standalone, 8B split-only",
+change to "admits 2B and 3B standalone; 7B (>=4B) is split-only". Files with CONFIGS: src/01,02,03,
+04,06,07,08 (+ check 05,09). The split-tier model is now 7B (was 8B) in src/04 (split pipeline),
+src/06 (sensitivity), and the multisat scripts.
+SIM RE-RUN PLAN (do after editing CONFIGS+memory): re-run src/01-09 (fixed seed), regenerate
+Fig4-12; restyle all line figures via figstyle line helpers (POLICY_STYLE for comparison figs:
+Proposed/Greedy-Q/Greedy-E/Random/Static). Note Ppeak now all <6W so peak-cap experiments may need
+the cap retuned (old P_CAP=12W; configs were <=11W before, now <=5.6W — the cap-tightening sweep in
+src/06 must use a lower cap range to still bind). FLAG in OPEN_QUESTIONS if the peak-cap story changes.
+PAPER note: calibration measured on 16GB Orin NX; simulated satellite = 8GB shared w/ sensing ⇒ >=4B splits.
