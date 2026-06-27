@@ -211,3 +211,24 @@ numbers; risky/subjective calls go to OPEN_QUESTIONS.md, not auto-applied.
   project (MCP shows only main.tex), so upload is user-side. Flagged in Q5.
 - NEXT: regenerate Fig 7/9/10 PDFs with the Static legend (run src/04, src/06); then W4 prose
   tightening (academic-writing) + W5 weak-figure fixes (Fig 5 redundant, Fig 4 needs baseline).
+
+## User directives (mid-session, apply across W2/W4/W5)
+1. SIMULATION ACTION SPACE = the Pareto-efficient measured configs only (currently {Qwen2-VL-2B,
+   7B, 8B}; re-derive after InternVL2.5-4B + any prompt change). Each config is an opaque measured
+   4-tuple (Q,E,T,Ppeak) — NOT parameterized by model size. The non-monotonicity of quality vs
+   size (2B 0.418 > 3B 0.30 > 4B 0.342) is to be presented as a MOTIVATING finding in the
+   calibration subsection: quality depends on architecture+generation, not scale, so configs must
+   be empirically profiled and a profile-driven scheduler is needed (supports C2). Rewrite the old
+   monotonic "3B→7B→8B costs 5.2× for 0.17" narrative accordingly. [awaiting final user OK on
+   Pareto-only action space — do NOT re-run sims with new configs until confirmed; OPEN_QUESTIONS Q4]
+2. EVALUATION STRUCTURE (from user's exemplar paper): (a) a dedicated "Benchmark Solutions"
+   subsection describing each baseline as an algorithm (what it selects, what info it uses, why it
+   fails) — our \subsection{Baselines} becomes this; (b) per-figure FOUR-PART discipline:
+   setup line (swept param + fixed values) → figure ref + quantitative result per policy →
+   MECHANISM as an explicit x→a→b→y causal chain (change x ⇒ system state a ⇒ method behaves b ⇒
+   result y) → optional second observation+reason. Apply to every results paragraph in W4.
+3. LINE-PLOT STYLE: all line figures (new AND existing: sim_V, milp_gap, dynamic_isl,
+   eclipse_stress, longhorizon, sensitivity_*) use figstyle.py `apply_lineplot_style()` +
+   `plot_series()`/`POLICY_STYLE` + `finalize_lineplot()` + `savefig_lines()` (big Times New Roman,
+   thick lines, distinct per-series markers, PDF+EPS). Verify no text overlap, data not hugging the
+   frame, legend not covering curves. Retrofit existing line figures in W5.
