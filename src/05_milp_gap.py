@@ -53,8 +53,8 @@ RNG_SEED       = 7
 
 # measured standalone configs (Table I)
 CFG = {
-    "3B": dict(Q=0.30, E=5.4,  P=6.6,  N=2),
-    "7B": dict(Q=0.47, E=27.9, P=10.7, N=4),
+    "2B": dict(Q=0.398, E=3.93, P=4.15, N=2),
+    "3B": dict(Q=0.464, E=5.78, P=4.51, N=2),
 }
 MODELS = list(CFG)
 for m in CFG.values():

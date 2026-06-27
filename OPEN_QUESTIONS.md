@@ -2,6 +2,32 @@
 
 Items the overnight run will NOT decide autonomously. Review in the morning.
 
+## Q6 — [IMPORTANT] RESISC45 configs weaken two headline claims; reframe needed
+
+After re-running the sims with the RESISC45 8GB-satellite configs, two headline stories are
+materially weaker (the data is honest; the old framing was tuned to the expensive 8B numbers):
+
+1. **Zero-blackout-at-default is gone.** At the 4-sat split default NO policy blacks out now
+   (Greedy-Q downtime 2438→0). The RESISC45 configs are cheap (≤9J), so the default constellation
+   isn't energy-stressed. The safety advantage still holds, but only under TIGHTER sweeps (1kJ
+   battery, 4W solar, 70% load) — see sensitivity Fig 9. **Recommendation:** stop claiming the
+   blackout win in the headline Table 2 prose; move it to the sensitivity section ("the advantage
+   emerges as resources tighten"), which is more honest and still strong.
+
+2. **Peak-power shield is thin.** All measured peak draws are ≤5.57W and close together, so the
+   cap only binds in a narrow 4.0–4.5W window (vs the old 8–10W). It still works (baselines violate
+   ~16k times at cap≤4.5W, ours 0), but it's less dramatic. **Also suspect:** RESISC45 power may be
+   under-read — `bench_generic.py` did not lock the Jetson power mode/clocks (RESISC45 energy was ~4×
+   lower than EuroSAT for the same 8B). **Options:** (a) re-measure with locked MAXN power mode for
+   clean peak numbers; (b) keep as-is and present the peak shield as a "by-construction guarantee
+   that binds under tight caps" rather than a headline empirical win; (c) de-emphasize C2's peak axis.
+
+3. The cumulative-quality trade-off is unchanged (ours competitive, not the raw-throughput leader);
+   the win remains "only policy that runs the top 7B tier via split (3755 splits)."
+
+These reframings change the EVALUATION prose emphasis. I did NOT rewrite the narrative — flagging
+for your call. The numbers themselves are in data/sens_*.csv and the regenerated figures.
+
 ## Q0 — [RESOLVED 2026-06-27] premise restored via realistic 8GB-satellite memory model
 
 USER DECISION: do NOT add a giant model and do NOT drop the split. Instead re-ground the

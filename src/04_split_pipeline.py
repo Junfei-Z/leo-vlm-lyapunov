@@ -53,24 +53,24 @@ HORIZON = N_ORBITS * N_SLOTS_PER_ORBIT
 # E  = per-inference energy [J] ; Ppeak = calibrated peak power [W]
 # RAM = approximate model memory footprint [GB] (for the single-sat memory limit)
 CONFIGS = {
-    "3B": dict(T=1.32, E=5.4,  Ppeak=6.6,  Q=0.30, RAM=2.0),
-    "7B": dict(T=3.89, E=27.9, Ppeak=10.7, Q=0.47, RAM=4.5),
-    "8B": dict(T=8.66, E=62.8, Ppeak=11.0, Q=0.51, RAM=5.5),
+    "2B": dict(T=1.24, E=3.93, Ppeak=4.15, Q=0.398, RAM=2.5),
+    "3B": dict(T=1.74, E=5.78, Ppeak=4.51, Q=0.464, RAM=3.5),
+    "7B": dict(T=2.76, E=9.13, Ppeak=5.57, Q=0.573, RAM=6.5),
 }
 for m in CONFIGS.values():
     m["N"] = int(np.ceil(m["T"] / TAU))
-STANDALONE = ["3B", "7B"]          # configs that fit in a single satellite
-SPLIT_MODEL = "8B"                 # must be split across two satellites
+STANDALONE = ["2B", "3B"]          # fit in one 8GB satellite (shared w/ sensing)
+SPLIT_MODEL = "7B"                 # >=4B: split across two satellites
 
-# Per-stage cost of the split 8B pipeline (front/rear each ~half of measured totals).
+# Per-stage cost of the split 7B pipeline (front/rear each ~half of measured totals).
 SPLIT = dict(
-    Q=CONFIGS["8B"]["Q"],          # quality credited when the rear stage completes
-    N_front=int(np.ceil(CONFIGS["8B"]["N"] / 2)),
-    N_rear=int(np.ceil(CONFIGS["8B"]["N"] / 2)),
-    E_front=CONFIGS["8B"]["E"] / 2,
-    E_rear=CONFIGS["8B"]["E"] / 2,
-    Ppeak=CONFIGS["8B"]["Ppeak"],
-    RAM=CONFIGS["8B"]["RAM"] / 2,   # each satellite holds only half the model
+    Q=CONFIGS["7B"]["Q"],          # quality credited when the rear stage completes
+    N_front=int(np.ceil(CONFIGS["7B"]["N"] / 2)),
+    N_rear=int(np.ceil(CONFIGS["7B"]["N"] / 2)),
+    E_front=CONFIGS["7B"]["E"] / 2,
+    E_rear=CONFIGS["7B"]["E"] / 2,
+    Ppeak=CONFIGS["7B"]["Ppeak"],
+    RAM=CONFIGS["7B"]["RAM"] / 2,   # each satellite holds only half the model
 )
 
 # ---------------- constellation ----------------
@@ -78,7 +78,7 @@ N_SAT = 4
 N_SOURCES = 6
 ARRIVAL_PROB = 0.10
 SAT_PHASE = [int(k * N_SLOTS_PER_ORBIT / N_SAT) for k in range(N_SAT)]
-SAT_RAM = 4.0                      # per-satellite RAM [GB]: fits 3B & 7B, NOT full 8B
+SAT_RAM = 5.0                      # per-sat VLM RAM [GB] (8GB - OS/IO/sensing): fits 2B & 3B, NOT 7B
 
 # ---------------- solar model (paper Eq.17) ----------------
 P_SOLAR   = 8.0
@@ -128,7 +128,7 @@ def _energy_feasible(e_per_slot, b, omega):
 
 
 def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t):
-    """Proposed scheduler. Considers BOTH standalone configs AND the split 8B
+    """Proposed scheduler. Considers BOTH standalone configs AND the split 7B
     pipeline (which needs two free, ISL-connected satellites). Picks the option
     minimizing drift-plus-penalty subject to hard peak-power & battery feasibility."""
     best_score, best = None, None
@@ -191,7 +191,7 @@ def _greedy_standalone(pending, free_sats, b, omega, pick_cfg):
 
 
 def choose_greedy_q(pending, free_sats, b, omega, QE, QP, QU, V, rng, t):
-    """Wants max quality but CANNOT split -> limited to the best single-sat config (7B)."""
+    """Wants max quality but CANNOT split -> limited to the best single-sat config (3B)."""
     return _greedy_standalone(pending, free_sats, b, omega,
                               lambda: max(STANDALONE, key=lambda k: CONFIGS[k]["Q"]))
 
@@ -217,7 +217,7 @@ def choose_maxbatt_7b(pending, free_sats, b, omega, QE, QP, QU, V, rng, t):
     if not pending or not free_sats:
         return None
     s = max(free_sats, key=lambda x: b[x]); i = pending[0]
-    for mname in ("7B", "3B"):
+    for mname in ("3B", "2B"):
         e_ps = CONFIGS[mname]["E"] / CONFIGS[mname]["N"]
         if _energy_feasible(e_ps, b[s], omega[s]):
             return ("standalone", s, i, mname)
@@ -368,8 +368,8 @@ def compare_all():
               f"{r['service_rate']:7.3f} | {r['split_tasks']:6d} | "
               f"{r['min_fill']:7.3f} | {r['total_quality']:7.1f}")
     print()
-    print("  Only the proposed scheduler can run the 8B model (via split pipeline);")
-    print("  baselines are capped at 7B because 8B does not fit in a single satellite.")
+    print("  Only the proposed scheduler can run the 7B model (via split pipeline);")
+    print("  baselines are capped at 3B because 7B does not fit in a single satellite.")
     return results
 
 
@@ -381,7 +381,7 @@ def plot_comparison(results, fname="splitpipeline_comparison.png"):
     # (a) total delivered quality (ours wins: unlocks 8B)
     totq = [results[n]["total_quality"] for n in names]
     bars = ax[0, 0].bar(names, totq, color=colors)
-    ax[0, 0].set_title("(a) Total delivered quality  (ours unlocks 8B via split)")
+    ax[0, 0].set_title("(a) Total delivered quality  (ours unlocks 7B via split)")
     ax[0, 0].set_ylabel("sum quality")
     ax[0, 0].tick_params(axis="x", rotation=20)
 
@@ -402,7 +402,7 @@ def plot_comparison(results, fname="splitpipeline_comparison.png"):
     # (d) number of split (8B) tasks executed
     spl = [results[n]["split_tasks"] for n in names]
     ax[1, 1].bar(names, spl, color=colors)
-    ax[1, 1].set_title("(d) 8B pipeline tasks executed  (only ours can)")
+    ax[1, 1].set_title("(d) 7B pipeline tasks executed  (only ours can)")
     ax[1, 1].set_ylabel("# split tasks")
     ax[1, 1].tick_params(axis="x", rotation=20)
 
@@ -421,8 +421,8 @@ if __name__ == "__main__":
     print("=" * 92)
     print(f"  tau={TAU}s | {N_ORBITS} orbits ({HORIZON} slots) | P_cap={P_CAP}W "
           f"P_solar={P_SOLAR}W eta={ETA_PANEL} B_max={B_MAX/1000:.0f}kJ")
-    print(f"  per-sat RAM={SAT_RAM}GB  ->  3B(2.0) & 7B(4.5? capped) fit; full 8B(5.5) does NOT")
-    print(f"  8B runs only as a 2-sat split pipeline (front N={SPLIT['N_front']}, "
+    print(f"  per-sat RAM={SAT_RAM}GB  ->  2B(2.5) & 3B(3.5) fit; 7B(6.5) does NOT (split)")
+    print(f"  7B runs only as a 2-sat split pipeline (front N={SPLIT['N_front']}, "
           f"rear N={SPLIT['N_rear']})")
     print("-" * 92)
     results = compare_all()

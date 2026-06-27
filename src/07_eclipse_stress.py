@@ -32,9 +32,9 @@ ORBIT_PERIOD_S = 95 * 60
 N_SLOTS_PER_ORBIT = int(ORBIT_PERIOD_S / TAU)          # 5700 slots
 
 CONFIGS = {
-    "3B": dict(T=1.32, E=5.4,  Ppeak=6.6,  Q=0.30),
-    "7B": dict(T=3.89, E=27.9, Ppeak=10.7, Q=0.47),
-    "8B": dict(T=8.66, E=62.8, Ppeak=11.0, Q=0.51),
+    "2B": dict(T=1.24, E=3.93, Ppeak=4.15, Q=0.398),
+    "3B": dict(T=1.74, E=5.78, Ppeak=4.51, Q=0.464),
+    "7B": dict(T=2.76, E=9.13, Ppeak=5.57, Q=0.573),
 }
 for m in CONFIGS.values():
     m["N"] = int(np.ceil(m["T"] / TAU))

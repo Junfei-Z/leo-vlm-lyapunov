@@ -35,21 +35,21 @@ HORIZON = N_ORBITS * N_SLOTS_PER_ORBIT             # 17100
 
 # ---------------- measured configs (Table I) ----------------
 CONFIGS = {
-    "3B": dict(T=1.32, E=5.4,  Ppeak=6.6,  Q=0.30, RAM=2.0),
-    "7B": dict(T=3.89, E=27.9, Ppeak=10.7, Q=0.47, RAM=4.5),
-    "8B": dict(T=8.66, E=62.8, Ppeak=11.0, Q=0.51, RAM=5.5),
+    "2B": dict(T=1.24, E=3.93, Ppeak=4.15, Q=0.398, RAM=2.5),
+    "3B": dict(T=1.74, E=5.78, Ppeak=4.51, Q=0.464, RAM=3.5),
+    "7B": dict(T=2.76, E=9.13, Ppeak=5.57, Q=0.573, RAM=6.5),
 }
 for _m in CONFIGS.values():
     _m["N"] = int(np.ceil(_m["T"] / TAU))
-STANDALONE = ["3B", "7B"]
+STANDALONE = ["2B", "3B"]
 SPLIT = dict(
-    Q=CONFIGS["8B"]["Q"],
-    N_front=int(np.ceil(CONFIGS["8B"]["N"] / 2)),
-    N_rear=int(np.ceil(CONFIGS["8B"]["N"] / 2)),
-    E_front=CONFIGS["8B"]["E"] / 2,
-    E_rear=CONFIGS["8B"]["E"] / 2,
-    Ppeak=CONFIGS["8B"]["Ppeak"],
-    RAM=CONFIGS["8B"]["RAM"] / 2,
+    Q=CONFIGS["7B"]["Q"],
+    N_front=int(np.ceil(CONFIGS["7B"]["N"] / 2)),
+    N_rear=int(np.ceil(CONFIGS["7B"]["N"] / 2)),
+    E_front=CONFIGS["7B"]["E"] / 2,
+    E_rear=CONFIGS["7B"]["E"] / 2,
+    Ppeak=CONFIGS["7B"]["Ppeak"],
+    RAM=CONFIGS["7B"]["RAM"] / 2,
 )
 
 ETA_PANEL = 0.30
@@ -182,7 +182,7 @@ def choose_maxbatt_7b(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
     if not pending or not free_sats:
         return None
     s = max(free_sats, key=lambda x: b[x]); i = pending[0]
-    for mname in ("7B", "3B"):
+    for mname in ("3B", "2B"):
         e_ps = CONFIGS[mname]["E"] / CONFIGS[mname]["N"]
         if _energy_feasible(e_ps, b[s], omega[s]):
             return ("standalone", s, i, mname)
@@ -289,8 +289,11 @@ def eval_all(prm):
 def reproduction_check():
     r = eval_all(Params())
     ours, gq = r["Lyapunov (ours)"], r["Greedy-Q"]
-    ok = (ours["blackout_slots"] == 0 and ours["split_tasks"] == 1100
-          and abs(ours["total_quality"] - 2378.4) < 0.5 and gq["blackout_slots"] == 2438)
+    # RESISC45 8GB-satellite configs (2B/3B standalone, 7B split). At the 4-sat default the
+    # cheap RESISC45 configs leave the constellation un-stressed, so Greedy-Q no longer blacks
+    # out here (was 2438 in the 8B era); the safety advantage now shows under tighter sweeps.
+    ok = (ours["blackout_slots"] == 0 and ours["split_tasks"] == 3755
+          and abs(ours["total_quality"] - 3388.4) < 0.5 and gq["blackout_slots"] == 0)
     print(f"  reproduction @ default: ours blackout={ours['blackout_slots']} "
           f"split={ours['split_tasks']} totQ={ours['total_quality']:.1f} | "
           f"Greedy-Q blackout={gq['blackout_slots']}  -> "
@@ -306,7 +309,7 @@ SWEEPS = [
     ("arrival", "arrival_prob",    [0.02, 0.05, 0.10, 0.20, 0.40, 0.70]),
     ("battery", "B_max",           [1000, 2000, 3000, 5000, 8000, 12000]),
     ("solar",   "P_solar",         [4, 6, 8, 10, 14]),
-    ("pcap",    "P_cap",           [8, 9, 10, 11, 12, 15]),
+    ("pcap",    "P_cap",           [4.0, 4.5, 5.0, 5.5, 6.0, 8.0]),  # RESISC45 draws 4.15/4.51/5.57W; bind below ~5.6W
     ("sunlit",  "sunlit_fraction", [0.45, 0.50, 0.55, 0.60, 0.70, 0.80]),
     ("nsrc",    "n_sources",       [2, 4, 6, 10, 16]),
 ]

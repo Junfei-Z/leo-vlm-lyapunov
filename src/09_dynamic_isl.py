@@ -84,7 +84,7 @@ def main():
     fig, ax = plt.subplots(1, 2, figsize=(12, 4.2))
     ax[0].plot(ps, splits, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7)
     ax[0].set_xlabel("ISL availability fraction $p_{\\mathrm{ISL}}$")
-    ax[0].set_ylabel("8B split inferences")
+    ax[0].set_ylabel("7B split inferences")
     ax[0].set_title("(a) Splits fall as ISL toggles (Eq.16)")
     axq = ax[1]
     axq.plot(ps, totq, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7, label="total quality")

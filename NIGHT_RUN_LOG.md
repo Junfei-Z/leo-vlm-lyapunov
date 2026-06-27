@@ -290,3 +290,27 @@ Proposed/Greedy-Q/Greedy-E/Random/Static). Note Ppeak now all <6W so peak-cap ex
 the cap retuned (old P_CAP=12W; configs were <=11W before, now <=5.6W — the cap-tightening sweep in
 src/06 must use a lower cap range to still bind). FLAG in OPEN_QUESTIONS if the peak-cap story changes.
 PAPER note: calibration measured on 16GB Orin NX; simulated satellite = 8GB shared w/ sensing ⇒ >=4B splits.
+
+## Sim re-run DONE (CONFIGS+memory refactored, verified) — 3 narrative shifts flagged
+- DID: replaced CONFIGS (3B/7B/8B→2B/3B/7B RESISC45 values) in all 7 sim files; STANDALONE=["2B","3B"],
+  SPLIT_MODEL/SPLIT→7B; Static baseline fixed-config 7B→3B (7B is split-only, baselines can't host it);
+  src/05 CFG→{2B,3B}; src/06 cap sweep [8-15]→[4.0-8.0]W; updated 04 labels & 06 reproduction guardrail.
+  All 9 scripts run clean; 06 guardrail passes; verified each output.
+- BUGS CAUGHT during verification (would have silently corrupted results if run blind):
+  (a) refactor script missed src/06 CONFIGS block (left old 8B + STANDALONE referencing absent 2B);
+  (b) Static baseline still ran the split-only 7B standalone (illegal under 8GB model) → fixed to 3B;
+  (c) peak-cap sweep range never bound (configs <6W vs cap 8-15W) → lowered to 4-8W.
+- NEW NUMBERS (src/04, 4-sat split default): ours blackout=0 split=3755 minFill=0.329 totQ=3388.4;
+  Greedy-Q/Static totQ=3703 (run 3B); Random 3411; Greedy-E 3177. Peak-cap sweep: at cap<=4.5W
+  baselines violate 8k-16k times, ours=0.
+- THREE NARRATIVE SHIFTS (do NOT hard-sell the old story; see OPEN_QUESTIONS Q6):
+  1. At the 4-sat DEFAULT no policy blacks out now (Greedy-Q downtime 2438→0): RESISC45 configs are
+     cheap so the default constellation isn't energy-stressed. The zero-blackout advantage now appears
+     only under TIGHTER sensitivity sweeps (low battery/solar, high load), not the headline table.
+  2. Peak-shield story is THINNER: all draws <=5.57W and close together, so the cap-binding window is
+     narrow (4.0-4.5W) vs the old 8-10W. Still valid (baselines violate ~16k when cap tight) but less
+     dramatic. (Also: RESISC45 power may be under-read — bench_generic didn't lock power mode.)
+  3. Headline quality is still an honest trade-off (ours 3388 < Static/Greedy-Q 3703); the win is
+     "only one that runs the top 7B model via split (3755 splits) + advantage under tighter regimes."
+- NEXT: regenerate Fig4-12 + restyle line figures (figstyle line helpers); draft EVALUATION text.
+  Figures currently regenerated with OLD house style + NEW data; restyle pending.
