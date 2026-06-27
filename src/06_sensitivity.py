@@ -351,7 +351,7 @@ def _series(rows, policy, metric_idx):
 
 
 def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
-    titles = {"nsat": "satellites", "arrival": "arrival prob.", "battery": "battery $B_{\\max}$ (J)",
+    titles = {"nsat": "satellites", "arrival": "arrival prob.", "battery": "battery $B_{\\max}$ (kJ)",
               "panel": "solar panel power (W)", "pbase": "platform load $P_{base}$ (W)", "sunlit": "sunlit fraction",
               "nsrc": "sources", "qdemand": "quality demand $U_{tgt}$"}
     midx = METRICS.index(metric)
@@ -374,7 +374,10 @@ def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
         if tag in ("nsat", "nsrc", "battery"):
             ax.set_xscale("log")
             ax.set_xticks(values)
-            ax.xaxis.set_major_formatter(ScalarFormatter())
+            if tag == "battery":
+                ax.set_xticklabels([str(int(v / 1000)) for v in values])
+            else:
+                ax.xaxis.set_major_formatter(ScalarFormatter())
             ax.xaxis.set_minor_formatter(NullFormatter())
             ax.tick_params(axis="x", which="minor", length=0)
     axes.flat[0].set_ylabel(ylabel); axes.flat[4].set_ylabel(ylabel)

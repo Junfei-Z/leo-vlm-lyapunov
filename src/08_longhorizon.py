@@ -185,7 +185,7 @@ def main():
     ax.axhline(0.0, color=PALETTE["neutral"], lw=1.0, ls=":")
     ax.set_xlabel("Horizon $T$ [slots]")
     ax.set_ylabel(r"running backlog rate $Q(T)/T$")
-    ax.set_title("Long-horizon mean-rate stability:  $Q(T)/T \\to 0$")
+    ax.set_title(r"$Q(T)/T \to 0$")
     ax.legend(loc="upper right", fontsize=13)
     ax.grid(alpha=0.3)
 

@@ -12,12 +12,22 @@ PALETTE = {
 }
 
 def apply_house_style():
+    # Big Times New Roman text that stays legible when figures are shrunk into the
+    # 2-column layout, thick lines, distinct markers (the user's line-plot preference,
+    # sized so it also works for the multi-panel sensitivity/comparison grids).
     mpl.rcParams.update({
-        "font.family": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
-        "font.size": 16,
+        "font.family": ["Times New Roman", "Times", "DejaVu Serif", "serif"],
+        "font.size": 20,
+        "axes.labelsize": 24,
+        "axes.titlesize": 22,
+        "xtick.labelsize": 19,
+        "ytick.labelsize": 19,
+        "legend.fontsize": 18,
+        "lines.linewidth": 3.0,
+        "lines.markersize": 9,
         "axes.spines.right": False,
         "axes.spines.top": False,
-        "axes.linewidth": 2.0,
+        "axes.linewidth": 1.8,
         "legend.frameon": False,
         "svg.fonttype": "none",
         "pdf.fonttype": 42,   # embed TrueType so text stays selectable

@@ -85,7 +85,7 @@ def main():
     ax[0].plot(ps, splits, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7)
     ax[0].set_xlabel("ISL availability fraction $p_{\\mathrm{ISL}}$")
     ax[0].set_ylabel("7B split inferences")
-    ax[0].set_title("(a) Splits fall as ISL toggles (Eq.16)")
+    ax[0].set_title("(a)", loc="left")
     axq = ax[1]
     axq.plot(ps, totq, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7, label="total quality")
     axq.set_xlabel("ISL availability fraction $p_{\\mathrm{ISL}}$")
@@ -94,7 +94,7 @@ def main():
     axt.plot(ps, minf, "s--", color=PALETTE["red_strong"], lw=2, ms=6, label="min-fill")
     axt.set_ylabel("min-fill (max-min)")
     axt.spines["top"].set_visible(False)
-    axq.set_title("(b) Reroute keeps throughput \\& 0 blackout")
+    axq.set_title("(b)", loc="left")
     lines = axq.get_lines() + axt.get_lines()
     axq.legend(lines, [l.get_label() for l in lines], loc="lower right")
     savefig_pub(fig, "dynamic_isl.pdf")

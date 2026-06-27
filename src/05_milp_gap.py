@@ -262,7 +262,7 @@ def main():
     ax[0].set_xscale("log")
     ax[0].set_xlabel(r"control parameter $V$")
     ax[0].set_ylabel(r"online min-quality $/\ U^\star$")
-    ax[0].set_title(rf"(a) Online approaches optimum (mean over {N_INSTANCES} instances)")
+    ax[0].set_title("(a)", loc="left")
     ax[0].legend(loc="lower right")
     # (b) normalized gap vs V with c/V reference fitted to the largest-V point
     ax[1].plot(Varr, gaps, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7,
@@ -275,7 +275,7 @@ def main():
     ax[1].set_ylim(0, float(gaps.max()) * 1.15)   # keep on data scale; 1/V guide visible in decay region
     ax[1].set_xlabel(r"control parameter $V$")
     ax[1].set_ylabel(r"$(U^\star-$online$)\,/\,U^\star$")
-    ax[1].set_title("(b) Gap shrinks with $V$ (large-$V$: $O(1/V)$)")
+    ax[1].set_title("(b)", loc="left")
     ax[1].legend(loc="upper right")
     savefig_pub(fig, "milp_gap.pdf")
     fig.savefig("milp_gap.png", dpi=130)

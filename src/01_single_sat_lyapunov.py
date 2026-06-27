@@ -285,7 +285,7 @@ def plot_timeseries(res, res_gq=None, fname="sim_timeseries.png"):
         ax[0].plot(t, np.array(gq["battery"]) / 1000.0, color=PALETTE["red_strong"], lw=2.0, ls="--", label="Greedy-Q")
         ax[0].legend(loc="lower right", fontsize=11)
     ax[0].set_ylabel("Battery [kJ]")
-    ax[0].set_title("(a) Battery level  (shaded = eclipse)")
+    ax[0].set_title("(a) Battery (shaded = eclipse)", loc="left")
 
     # (b) energy virtual queue
     shade(ax[1])
@@ -294,19 +294,19 @@ def plot_timeseries(res, res_gq=None, fname="sim_timeseries.png"):
         ax[1].plot(t, gq["QE"], color=PALETTE["red_strong"], lw=2.0, ls="--", label="Greedy-Q")
         ax[1].legend(loc="upper left", fontsize=11)
     ax[1].set_ylabel(r"$Q^E(t)$")
-    ax[1].set_title("(b) Energy virtual queue: Proposed stays bounded; Greedy-Q runs a large backlog")
+    ax[1].set_title("(b) Energy queue $Q^E(t)$", loc="left")
 
     # (c) power virtual queue + peak power
     shade(ax[2])
     ax[2].plot(t, log["QP"], color="tab:purple", label=r"$Q^P(t)$")
     ax[2].set_ylabel(r"$Q^P(t)$")
-    ax[2].set_title("(c) Power virtual queue  (stays ~0 -> peak cap respected)")
+    ax[2].set_title("(c) Power queue $Q^P(t)$", loc="left")
 
     # (d) quality deficit queue (mean over sources)
     shade(ax[3])
     ax[3].plot(t, log["QU_mean"], color="tab:blue")
     ax[3].set_ylabel(r"mean $Q^U_i(t)$")
-    ax[3].set_title("(d) Quality deficit queue (mean over sources)")
+    ax[3].set_title("(d) Quality-deficit queue", loc="left")
     ax[3].set_xlabel("Time [min]")
 
     for a in ax:
@@ -333,7 +333,7 @@ def plot_V_tradeoff(Vs, fname="sim_V_tradeoff.png"):
     ax2.plot(Vs, qe, "s--", color="tab:red", label="avg energy queue backlog")
     ax2.set_ylabel("avg $Q^E$ backlog", color="tab:red")
     ax2.tick_params(axis="y", labelcolor="tab:red")
-    ax1.set_title("[O(1/V), O(V)] trade-off:  larger V -> more quality, larger backlog")
+    ax1.set_title("")
     ax1.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(fname, dpi=130)

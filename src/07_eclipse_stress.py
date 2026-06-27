@@ -215,7 +215,7 @@ def main():
     l1, lab1 = ax1.get_legend_handles_labels()
     l2, lab2 = ax2.get_legend_handles_labels()
     ax1.legend(l1 + l2, lab1 + lab2, loc="upper left", fontsize=12)
-    ax1.set_title("Eclipse-fraction stress: backlog grows past the stability boundary")
+    ax1.set_title("")
     ax1.grid(alpha=0.3)
 
     savefig_pub(fig, "eclipse_stress.pdf")

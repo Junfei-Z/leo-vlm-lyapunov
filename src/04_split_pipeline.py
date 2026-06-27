@@ -382,28 +382,28 @@ def plot_comparison(results, fname="splitpipeline_comparison.png"):
     # (a) total delivered quality (ours wins: unlocks 8B)
     totq = [results[n]["total_quality"] for n in names]
     bars = ax[0, 0].bar(names, totq, color=colors)
-    ax[0, 0].set_title("(a) Total delivered quality  (ours unlocks 7B via split)")
+    ax[0, 0].set_title("(a) Total quality", loc="left")
     ax[0, 0].set_ylabel("sum quality")
     ax[0, 0].tick_params(axis="x", rotation=20)
 
     # (b) min per-source fill (max-min fairness)
     minf = [results[n]["min_fill"] for n in names]
     ax[0, 1].bar(names, minf, color=colors)
-    ax[0, 1].set_title("(b) Min per-source quality fill  (max-min fairness)")
+    ax[0, 1].set_title("(b) Min-fill", loc="left")
     ax[0, 1].set_ylabel("min fill ratio")
     ax[0, 1].tick_params(axis="x", rotation=20)
 
     # (c) downtime & peak violations (safety)
     down = [results[n]["blackout_slots"] for n in names]
     ax[1, 0].bar(names, down, color=colors)
-    ax[1, 0].set_title("(c) Satellite downtime  (lower better; ours = 0)")
+    ax[1, 0].set_title("(c) Downtime", loc="left")
     ax[1, 0].set_ylabel("# blackout slots")
     ax[1, 0].tick_params(axis="x", rotation=20)
 
     # (d) number of split (8B) tasks executed
     spl = [results[n]["split_tasks"] for n in names]
     ax[1, 1].bar(names, spl, color=colors)
-    ax[1, 1].set_title("(d) 7B pipeline tasks executed  (only ours can)")
+    ax[1, 1].set_title("(d) 7B splits", loc="left")
     ax[1, 1].set_ylabel("# split tasks")
     ax[1, 1].tick_params(axis="x", rotation=20)
 
