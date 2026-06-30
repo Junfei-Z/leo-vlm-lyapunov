@@ -106,20 +106,20 @@ def _energy_feasible(e_per_slot, b, omega):
 
 
 # ---------------- policies (ported verbatim from src/04, P_cap via prm) ----------------
-def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
-    best_score, best = None, None
+def feasible_actions(pending, free_sats, b, omega, t, prm):
+    """SHARED feasibility oracle (identical for proposed + all baselines): split option,
+    ISL/handoff check (Eq.16), per-slot energy (e<=b+omega), peak-power bus check are all
+    defined ONCE here. Policies differ only in how they SELECT, never in what is feasible."""
+    acts = []
     for s in free_sats:
         for mname in STANDALONE:
             m = CONFIGS[mname]
             if prm.P_base + m["Ppeak"] > prm.P_cap:
                 continue
-            e_ps = m["E"] / m["N"]
-            if not _energy_feasible(e_ps, b[s], omega[s]):
+            if not _energy_feasible(m["E"] / m["N"], b[s], omega[s]):
                 continue
             for i in pending:
-                score = QE[s] * e_ps + QP[s] * m["Ppeak"] - (QU[i] + V) * m["Q"]
-                if best_score is None or score < best_score:
-                    best_score, best = score, ("standalone", s, i, mname)
+                acts.append(("standalone", s, i, mname))
     if len(free_sats) >= 2 and prm.P_base + SPLIT["Ppeak"] <= prm.P_cap:
         ef_ps = SPLIT["E_front"] / SPLIT["N_front"]
         er_ps = SPLIT["E_rear"] / SPLIT["N_rear"]
@@ -137,58 +137,59 @@ def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
                 if not _energy_feasible(er_ps, b[sr], omega[sr]):
                     continue
                 for i in pending:
-                    score = (QE[sf] * ef_ps + QE[sr] * er_ps
-                             + QP[sf] * SPLIT["Ppeak"] + QP[sr] * SPLIT["Ppeak"]
-                             - (QU[i] + V) * SPLIT["Q"])
-                    if best_score is None or score < best_score:
-                        best_score, best = score, ("split", sf, sr, i)
-    if best is not None and best_score < 0:
-        return best
-    return None
+                    acts.append(("split", sf, sr, i))
+    return acts
 
 
-def _greedy_standalone(pending, free_sats, b, omega, pick_cfg):
-    if not pending or not free_sats:
+def _act_quality(act):
+    return SPLIT["Q"] if act[0] == "split" else CONFIGS[act[3]]["Q"]
+
+
+def _act_energy(act):
+    if act[0] == "split":
+        return SPLIT["E_front"] + SPLIT["E_rear"]
+    return CONFIGS[act[3]]["E"]
+
+
+def _score_dpp(act, b, omega, QE, QP, QU, V):
+    if act[0] == "standalone":
+        _, s, i, mname = act
+        m = CONFIGS[mname]; e_ps = m["E"] / m["N"]
+        return QE[s] * e_ps + QP[s] * m["Ppeak"] - (QU[i] + V) * m["Q"]
+    _, sf, sr, i = act
+    ef_ps = SPLIT["E_front"] / SPLIT["N_front"]; er_ps = SPLIT["E_rear"] / SPLIT["N_rear"]
+    return (QE[sf] * ef_ps + QE[sr] * er_ps
+            + QP[sf] * SPLIT["Ppeak"] + QP[sr] * SPLIT["Ppeak"]
+            - (QU[i] + V) * SPLIT["Q"])
+
+
+def choose_lyapunov(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
+    acts = feasible_actions(pending, free_sats, b, omega, t, prm)
+    if not acts:
         return None
-    s = free_sats[0]; i = pending[0]
-    mname = pick_cfg()
-    e_ps = CONFIGS[mname]["E"] / CONFIGS[mname]["N"]
-    if _energy_feasible(e_ps, b[s], omega[s]):
-        return ("standalone", s, i, mname)
-    return None
+    best = min(acts, key=lambda a: _score_dpp(a, b, omega, QE, QP, QU, V))
+    return best if _score_dpp(best, b, omega, QE, QP, QU, V) < 0 else None
 
 
 def choose_greedy_q(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
-    return _greedy_standalone(pending, free_sats, b, omega,
-                              lambda: max(STANDALONE, key=lambda k: CONFIGS[k]["Q"]))
+    acts = feasible_actions(pending, free_sats, b, omega, t, prm)
+    return max(acts, key=_act_quality) if acts else None
 
 
 def choose_greedy_e(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
-    return _greedy_standalone(pending, free_sats, b, omega,
-                              lambda: min(STANDALONE, key=lambda k: CONFIGS[k]["E"]))
+    acts = feasible_actions(pending, free_sats, b, omega, t, prm)
+    return min(acts, key=_act_energy) if acts else None
 
 
 def choose_random(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
-    if not pending or not free_sats:
-        return None
-    s = free_sats[rng.integers(len(free_sats))]
-    i = pending[rng.integers(len(pending))]
-    mname = STANDALONE[rng.integers(len(STANDALONE))]
-    e_ps = CONFIGS[mname]["E"] / CONFIGS[mname]["N"]
-    if _energy_feasible(e_ps, b[s], omega[s]):
-        return ("standalone", s, i, mname)
-    return None
+    acts = feasible_actions(pending, free_sats, b, omega, t, prm)
+    return acts[rng.integers(len(acts))] if acts else None
 
 
-def choose_maxbatt_7b(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
-    if not pending or not free_sats:
-        return None
-    s = max(free_sats, key=lambda x: b[x]); i = pending[0]
-    for mname in ("3B", "2B"):
-        e_ps = CONFIGS[mname]["E"] / CONFIGS[mname]["N"]
-        if _energy_feasible(e_ps, b[s], omega[s]):
-            return ("standalone", s, i, mname)
-    return None
+def choose_static(pending, free_sats, b, omega, QE, QP, QU, V, rng, t, prm):
+    acts = [a for a in feasible_actions(pending, free_sats, b, omega, t, prm)
+            if a[0] == "standalone" and a[3] == "3B"]
+    return max(acts, key=lambda a: b[a[1]]) if acts else None
 
 
 POLICIES = {
@@ -196,7 +197,7 @@ POLICIES = {
     "Greedy-Q":        choose_greedy_q,
     "Greedy-E":        choose_greedy_e,
     "Random":          choose_random,
-    "Static":      choose_maxbatt_7b,
+    "Static":          choose_static,
 }
 
 
@@ -294,8 +295,10 @@ def reproduction_check():
     # RESISC45 8GB-satellite configs (2B/3B standalone, 7B split) + small 2W default panel
     # (energy-balanced, inference is a secondary load). Energy now binds at the default:
     # Greedy-Q drains the eclipse-side battery and blacks out 2791 slots; ours stays at 0.
+    # Shared-feasibility baselines: Greedy-Q now CAN split, and greedily doing so drains the
+    # battery (no energy foresight) -> 7748 blackout slots, vs 0 for the proposed DPP scheduler.
     ok = (ours["blackout_slots"] == 0 and ours["split_tasks"] == 3529
-          and abs(ours["total_quality"] - 3435.6) < 0.5 and gq["blackout_slots"] == 2791)
+          and abs(ours["total_quality"] - 3435.6) < 0.5 and gq["blackout_slots"] == 7748)
     print(f"  reproduction @ default: ours blackout={ours['blackout_slots']} "
           f"split={ours['split_tasks']} totQ={ours['total_quality']:.1f} | "
           f"Greedy-Q blackout={gq['blackout_slots']}  -> "
