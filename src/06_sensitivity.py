@@ -65,7 +65,7 @@ class Params:
     n_sources: int = 6
     arrival_prob: float = 0.10
     B_max: float = 5000.0
-    P_solar: float = 2.0
+    P_solar: float = 1.0
     P_cap: float = 15.0      # realistic satellite power-bus limit (Jetson 15W mode)
     P_base: float = 9.0      # platform baseline draw (sensing+comms+ADCS); inference shares the rest
     sunlit_fraction: float = 0.60
@@ -293,12 +293,11 @@ def reproduction_check():
     r = eval_all(Params())
     ours, gq = r["Lyapunov (ours)"], r["Greedy-Q"]
     # RESISC45 8GB-satellite configs (2B/3B standalone, 7B split) + small 2W default panel
-    # (energy-balanced, inference is a secondary load). Energy now binds at the default:
-    # Greedy-Q drains the eclipse-side battery and blacks out 2791 slots; ours stays at 0.
-    # Shared-feasibility baselines: Greedy-Q now CAN split, and greedily doing so drains the
-    # battery (no energy foresight) -> 7748 blackout slots, vs 0 for the proposed DPP scheduler.
-    ok = (ours["blackout_slots"] == 0 and ours["split_tasks"] == 3529
-          and abs(ours["total_quality"] - 3435.6) < 0.5 and gq["blackout_slots"] == 7748)
+    # Energy-constrained default (1.0W panel, opportunistic inference on a power-starved sat) +
+    # shared-feasibility baselines. Greedy-Q greedily splits with no energy foresight and blacks
+    # out 32741 slots; the proposed DPP scheduler stays at 0 and delivers the highest min-fill.
+    ok = (ours["blackout_slots"] == 0 and ours["split_tasks"] == 605
+          and abs(ours["total_quality"] - 3384.7) < 0.5 and gq["blackout_slots"] == 32741)
     print(f"  reproduction @ default: ours blackout={ours['blackout_slots']} "
           f"split={ours['split_tasks']} totQ={ours['total_quality']:.1f} | "
           f"Greedy-Q blackout={gq['blackout_slots']}  -> "
@@ -313,7 +312,7 @@ SWEEPS = [
     ("nsat",    "n_sat",           [2, 4, 8, 16]),
     ("arrival", "arrival_prob",    [0.02, 0.05, 0.10, 0.20, 0.40, 0.70]),
     ("battery", "B_max",           [1000, 2000, 3000, 5000, 8000, 12000]),
-    ("panel",   "P_solar",         [1.0, 1.5, 2.0, 3.0, 5.0, 8.0]),  # panel size (harvest power); 2.0=default
+    ("panel",   "P_solar",         [0.6, 0.8, 1.0, 1.5, 2.5, 5.0]),  # panel harvest power; 1.0=constrained default
     ("pbase",   "P_base",          [8, 10, 11, 12, 13, 14]),  # platform load rises -> inference headroom (15-Pbase) shrinks -> bus binds
     ("sunlit",  "sunlit_fraction", [0.45, 0.50, 0.55, 0.60, 0.70, 0.80]),
     ("nsrc",    "n_sources",       [2, 4, 6, 10, 16]),
