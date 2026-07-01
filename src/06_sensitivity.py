@@ -57,6 +57,7 @@ ETA_SIGMA = 0.02
 U_TGT = 0.30
 V_DEFAULT = 100.0
 RNG_SEED = 7
+SEEDS = list(range(7, 17))   # 10 seeds for arrival + solar-perturbation randomness (error bars)
 
 
 @dataclass(frozen=True)
@@ -328,14 +329,21 @@ def run_sweeps():
     for tag, field, values in SWEEPS:
         rows = []
         for v in values:
-            prm = replace(Params(), **{field: v})
-            res = eval_all(prm)
-            for pol, r in res.items():
-                rows.append([v, pol] + [r[m] for m in METRICS])
+            per_pol = {name: {m: [] for m in METRICS} for name in POLICIES}
+            for seed in SEEDS:
+                prm = replace(Params(), **{field: v})
+                for name, fn in POLICIES.items():
+                    r = run_sim(fn, prm, seed=seed)
+                    for m in METRICS:
+                        per_pol[name][m].append(r[m])
+            for pol in POLICIES:
+                means = [float(np.mean(per_pol[pol][m])) for m in METRICS]
+                stds = [float(np.std(per_pol[pol][m])) for m in METRICS]
+                rows.append([v, pol] + means + stds)
         path = f"data/sens_{tag}.csv"
         with open(path, "w", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["param_value", "policy"] + METRICS)
+            w.writerow(["param_value", "policy"] + METRICS + [m + "_sd" for m in METRICS])
             w.writerows(rows)
         all_data[tag] = rows
         print(f"  swept {field}: {len(values)} points x {len(POLICIES)} policies -> {path}")
@@ -344,12 +352,15 @@ def run_sweeps():
 
 def _series(rows, policy, metric_idx):
     xs = sorted(set(r[0] for r in rows))
-    ys = []
+    ys, es = [], []
+    nm = len(METRICS)
     for x in xs:
         for r in rows:
             if r[0] == x and r[1] == policy:
-                ys.append(r[2 + metric_idx]); break
-    return xs, ys
+                ys.append(r[2 + metric_idx])
+                es.append(r[2 + nm + metric_idx] if len(r) > 2 + nm + metric_idx else 0.0)
+                break
+    return xs, ys, es
 
 
 def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
@@ -365,10 +376,11 @@ def plot_sweeps(all_data, metric, ylabel, fname, logy=False):
     for k, (ax, (tag, field, values)) in enumerate(zip(axes.flat, SWEEPS)):
         rows = all_data[tag]
         for pol in POLICIES:
-            xs, ys = _series(rows, pol, midx)
+            xs, ys, es = _series(rows, pol, midx)
             lab = "ours" if pol == "Lyapunov (ours)" else pol
-            ax.plot(xs, ys, "o-", color=colors[pol], lw=2.4, ms=7,
-                    label=lab, alpha=0.95 if pol == "Lyapunov (ours)" else 0.8)
+            ax.errorbar(xs, ys, yerr=es, fmt="o-", color=colors[pol], lw=2.4, ms=7,
+                        capsize=3, elinewidth=1.2,
+                        label=lab, alpha=0.95 if pol == "Lyapunov (ours)" else 0.8)
         ax.set_xlabel(titles[tag])
         ax.set_title("(%s)" % chr(ord("a") + k), loc="left", fontsize=13)
         if logy:

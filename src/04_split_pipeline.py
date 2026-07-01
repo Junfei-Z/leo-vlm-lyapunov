@@ -355,20 +355,28 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
     )
 
 
+SEEDS = list(range(7, 17))   # 10 seeds: average over arrival + solar-perturbation randomness
+_METRICS = ["pcap_violations", "blackout_slots", "service_rate", "split_tasks", "min_fill", "total_quality"]
+
+
 def compare_all():
+    """Run every policy over SEEDS and report mean +/- std for each metric."""
+    agg = {name: {m: [] for m in _METRICS} for name in POLICIES}
+    for seed in SEEDS:
+        for name, fn in POLICIES.items():
+            r = run_sim(fn, seed=seed)
+            for m in _METRICS:
+                agg[name][m].append(r[m])
     results = {}
-    print(f"{'Policy':18s} | {'peakViol':>8s} | {'downtime':>8s} | {'svcRate':>7s} | "
-          f"{'split#':>6s} | {'minFill':>7s} | {'totQ':>7s}")
+    print(f"{'Policy':18s} | {'downtime':>13s} | {'split#':>11s} | {'minFill':>13s} | {'totQ':>13s}   (mean+/-std over %d seeds)" % len(SEEDS))
     print("-" * 92)
-    for name, fn in POLICIES.items():
-        r = run_sim(fn)
-        results[name] = r
-        print(f"{name:18s} | {r['pcap_violations']:8d} | {r['blackout_slots']:8d} | "
-              f"{r['service_rate']:7.3f} | {r['split_tasks']:6d} | "
-              f"{r['min_fill']:7.3f} | {r['total_quality']:7.1f}")
-    print()
-    print("  Only the proposed scheduler can run the 7B model (via split pipeline);")
-    print("  baselines are capped at 3B because 7B does not fit in a single satellite.")
+    for name in POLICIES:
+        st = {m: (float(np.mean(agg[name][m])), float(np.std(agg[name][m]))) for m in _METRICS}
+        results[name] = st
+        print(f"{name:18s} | {st['blackout_slots'][0]:7.0f}+/-{st['blackout_slots'][1]:<4.0f} | "
+              f"{st['split_tasks'][0]:6.0f}+/-{st['split_tasks'][1]:<4.0f} | "
+              f"{st['min_fill'][0]:.3f}+/-{st['min_fill'][1]:.3f} | "
+              f"{st['total_quality'][0]:7.1f}+/-{st['total_quality'][1]:<5.1f}")
     return results
 
 
@@ -376,37 +384,16 @@ def plot_comparison(results, fname="splitpipeline_comparison.png"):
     names = list(results.keys())
     colors = [PALETTE["blue_main"], PALETTE["red_strong"], "tab:green", "tab:orange", "tab:purple"]
     fig, ax = plt.subplots(2, 2, figsize=(13, 9))
-
-    # (a) total delivered quality (ours wins: unlocks 8B)
-    totq = [results[n]["total_quality"] for n in names]
-    bars = ax[0, 0].bar(names, totq, color=colors)
-    ax[0, 0].set_title("(a) Total quality", loc="left")
-    ax[0, 0].set_ylabel("sum quality")
-    ax[0, 0].tick_params(axis="x", rotation=20)
-
-    # (b) min per-source fill (max-min fairness)
-    minf = [results[n]["min_fill"] for n in names]
-    ax[0, 1].bar(names, minf, color=colors)
-    ax[0, 1].set_title("(b) Min-fill", loc="left")
-    ax[0, 1].set_ylabel("min fill ratio")
-    ax[0, 1].tick_params(axis="x", rotation=20)
-
-    # (c) downtime & peak violations (safety)
-    down = [results[n]["blackout_slots"] for n in names]
-    ax[1, 0].bar(names, down, color=colors)
-    ax[1, 0].set_title("(c) Downtime", loc="left")
-    ax[1, 0].set_ylabel("# blackout slots")
-    ax[1, 0].tick_params(axis="x", rotation=20)
-
-    # (d) number of split (8B) tasks executed
-    spl = [results[n]["split_tasks"] for n in names]
-    ax[1, 1].bar(names, spl, color=colors)
-    ax[1, 1].set_title("(d) 7B splits", loc="left")
-    ax[1, 1].set_ylabel("# split tasks")
-    ax[1, 1].tick_params(axis="x", rotation=20)
-
-    for a in ax.flat:
-        a.grid(alpha=0.3)
+    panels = [("total_quality", "(a) Total quality", "sum quality"),
+              ("min_fill",      "(b) Min-fill",      "min fill ratio"),
+              ("blackout_slots","(c) Downtime",      "# blackout slots"),
+              ("split_tasks",   "(d) 7B splits",     "# split tasks")]
+    for a, (metric, title, ylab) in zip(ax.flat, panels):
+        means = [results[n][metric][0] for n in names]
+        stds  = [results[n][metric][1] for n in names]
+        a.bar(names, means, yerr=stds, color=colors, capsize=4, error_kw=dict(lw=1.5))
+        a.set_title(title, loc="left"); a.set_ylabel(ylab)
+        a.tick_params(axis="x", rotation=20); a.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(fname, dpi=130)
     savefig_pub(fig, os.path.splitext(fname)[0] + ".pdf")
