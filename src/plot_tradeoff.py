@@ -48,8 +48,8 @@ SHORT = {
 # per-model label offsets (pts) + alignment to de-clutter the ~0.55-accuracy cluster
 LOFF = {
     "Qwen2-VL-2B-Q4": (5, -12), "Qwen2.5-VL-3B-Q4": (6, -3),
-    "Qwen2.5-VL-7B-Q4": (-6, -13), "InternVL2.5-4B-Q4": (2, 7),
-    "InternVL3-8B-Q4": (-2, 8), "gemma-3-4b-Q4": (-4, 7), "SmolVLM2-2.2B-Q4": (7, -2),
+    "Qwen2.5-VL-7B-Q4": (-6, 6), "InternVL2.5-4B-Q4": (4, -13),
+    "InternVL3-8B-Q4": (-2, 8), "gemma-3-4b-Q4": (-4, -13), "SmolVLM2-2.2B-Q4": (7, -2),
 }
 LHA = {"Qwen2.5-VL-7B-Q4": "right", "InternVL3-8B-Q4": "center", "gemma-3-4b-Q4": "right"}
 

@@ -36,7 +36,8 @@ def main():
     ax.plot(xs, ys, "-o", color="#0F4D92", lw=1.6, ms=4.5, zorder=4,
             label="Proposed (swept by $V$)")
     # label only V=1,10,100,300; uniform, none emphasised; staggered to avoid overlap
-    VOFF = {"1": (-22, 1), "10": (3, 8), "100": (-3, -12), "300": (5, -12)}
+    VOFF = {"1": (-26, -3), "10": (3, 8), "100": (-8, -13), "300": (7, -8)}
+    ax.set_xlim(2930, 6400)   # left pad so the V=1 label is not clipped
     for x, y, v in PROP:
         if v in VOFF:
             ax.annotate("$V$=" + v, (x, y), textcoords="offset points",
@@ -45,16 +46,22 @@ def main():
     for name, x, y, dt, dep in BASE:
         if dep:
             ax.scatter([x], [y], marker="s", s=42, c="#2E7D32", zorder=5, label=name)
-            # Greedy-E sits just below/left of Proposed(V=1); label below-right so the
-            # 5-sigma min-fill gap (V=1 clearly above Greedy-E) stays visible
-            off = (7, -9) if name == "Greedy-E" else (7, 2)
-            ax.annotate(name, (x, y), textcoords="offset points", xytext=off, fontsize=7)
+            # Greedy-E sits just below/left of Proposed(V=1); label below the square,
+            # clear of the descending proposed curve
+            if name == "Greedy-E":
+                ax.annotate(name, (x, y), textcoords="offset points", xytext=(0, -15),
+                            fontsize=7, ha="center")
+            else:
+                ax.annotate(name, (x, y), textcoords="offset points", xytext=(7, 2), fontsize=7)
         else:                          # blackout -> hollow, SLA-violation labelled
             ax.scatter([x], [y], marker="o", s=48, facecolors="none",
                        edgecolors="#B64342", linewidths=1.4, zorder=5)
+            # Greedy-Q label extends left-above; Random label goes below-right so it
+            # cannot collide with the legend in the upper-left
+            off, ha = ((-4, 7), "right") if name == "Greedy-Q" else ((7, -11), "left")
             ax.annotate("%s (%.1f%% down, $\\times$)" % (name, dt), (x, y),
-                        textcoords="offset points", xytext=(-4, 7), fontsize=6.3,
-                        color="#B64342", ha="right")
+                        textcoords="offset points", xytext=off, fontsize=6.3,
+                        color="#B64342", ha=ha)
 
     # the deployable top region is empty -> the conflict (place in the clear mid area)
     ax.annotate("high fairness + high throughput\nreachable only by blacking out",
@@ -62,7 +69,7 @@ def main():
 
     ax.set_xlabel("Total delivered quality")
     ax.set_ylabel("Min-fill (max-min)")
-    ax.set_ylim(0.09, 0.44)
+    ax.set_ylim(0.075, 0.44)
     ax.legend(loc="upper left", frameon=False)
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
