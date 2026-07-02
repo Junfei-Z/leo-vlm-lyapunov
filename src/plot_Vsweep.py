@@ -22,13 +22,13 @@ def main():
     apply_house_style()
     mpl.rcParams.update({"axes.labelsize": 10, "xtick.labelsize": 8.5,
                          "ytick.labelsize": 8.5, "legend.fontsize": 7.5})
-    fig, ax1 = plt.subplots(figsize=(3.6, 2.8))
+    fig, ax1 = plt.subplots(figsize=(3.6, 3.0))
     ax2 = ax1.twinx()
 
     l1 = ax1.plot(V, TOTQ, "-o", color="#0F4D92", lw=1.6, ms=4.5,
-                  label="Total quality (rises: Thm.~2)")
+                  label="Total quality (rises)")
     l2 = ax2.plot(V, MINF, "-s", color="#B64342", lw=1.6, ms=4.5,
-                  label="Min-fill (falls: conflict)")
+                  label="Min-fill (falls)")
 
     ax1.set_xscale("log")
     ax1.set_xlabel("Lyapunov weight $V$")
@@ -38,7 +38,10 @@ def main():
     ax2.tick_params(axis="y", labelcolor="#B64342")
     ax1.grid(True, which="both", alpha=0.3)
     lns = l1 + l2
-    ax1.legend(lns, [x.get_label() for x in lns], loc="center right", fontsize=7)
+    # both curves cross mid-plot and occupy all four corners -> legend above the axes
+    ax1.legend(lns, [x.get_label() for x in lns], loc="lower center",
+               bbox_to_anchor=(0.5, 1.01), ncol=2, frameon=False, fontsize=7.5,
+               columnspacing=1.2, handlelength=1.6)
     fig.tight_layout()
     out = os.path.join(os.path.dirname(__file__), "..", "figures", "Vsweep_conflict")
     savefig_pub(fig, out + ".pdf")
