@@ -1,0 +1,157 @@
+% ============================================================================
+% INTEGRATED EVALUATION (core) — for read-through before merging into main.tex.
+% Locked config: RESISC45 n=1300 all-Q4; P_cap=15W shared-budget abstraction;
+% P_base=7W nominal (lit. 3-10W) + swept; MAX peak calibration; V NOT pinned.
+% Numbers aligned across all subsections. NOTE: sensitivity/ISL/stability
+% subsections still carry OLD-config numbers and must be re-run separately (flagged).
+% ============================================================================
+
+\subsection{Hardware Calibration and Model Selection}\label{EV_CALIB}
+We profile seven vision-language models on RESISC45 (1300 images, 19 to 41 per
+category), each at 4-bit quantization on an NVIDIA Jetson Orin NX in its 15\,W
+power mode. Latency is timed per image, power is sampled at 50\,ms with
+\texttt{tegrastats}, and energy integrates power over the inference window.
+Fig.~\ref{fig:tradeoff} places every model on the accuracy-energy plane. Four
+models lie on the Pareto frontier: Qwen2-VL-2B (0.394 accuracy, 3.93\,J),
+Qwen2.5-VL-3B (0.456, 5.72\,J), Qwen2.5-VL-7B (0.549, 9.30\,J), and InternVL3-8B,
+which reaches the highest accuracy (0.562) at the highest energy (15.00\,J). The
+other three are dominated: SmolVLM2-2.2B (0.310), InternVL2.5-4B (0.548), and
+gemma-3-4b (0.538, 37.79\,J).
+
+We adopt the Qwen family as the deployment backbone for an architectural reason,
+not a per-point accuracy judgement. Qwen2-VL-2B, Qwen2.5-VL-3B, and
+Qwen2.5-VL-7B share one architecture and one activation interface, so they form a
+single three-tier ladder that maps onto the deployment tiers of this work: a
+light single-satellite model, a heavier single-satellite model, and a split-only
+model. Their uniform transformer-block structure keeps the activation dimension
+constant at any partition point, which is the precondition for the two-stage
+split. InternVL3-8B is an isolated 8B model of a different architecture: it does
+not compose with the on-board 2B and 3B tiers into one routable family, its
+larger size is even less feasible on a single satellite, and splitting it is
+heavier; its accuracy lead therefore does not change the deployment choice.
+InternVL2.5-4B is within statistical noise of Qwen2.5-VL-7B (0.548 versus 0.549).
+SmolVLM2-2.2B is the weakest model and is dominated by the smaller Qwen2-VL-2B,
+which shows that a model's frontier position is set by architecture and training
+rather than by parameter count alone.
+
+The split pipeline is required by a hardware constraint that does not depend on
+any accuracy comparison. A 4-bit Qwen2.5-VL-7B model, with its vision encoder and
+key-value cache, does not fit in the memory left on an 8\,GB satellite after the
+on-board sensing pipeline, so the two-satellite split is the only way to run the
+7B tier at all.
+
+\subsection{Peak-Power Calibration}\label{EV_PEAK}
+The instantaneous power cap is the second structural constraint. We model it as a
+shared power budget $P^{\text{cap}}{=}15$\,W, taking the Jetson 15\,W envelope as
+the nominal value; the platform baseline $P_{\text{base}}$ and the inference peak
+draw from this budget. This is an abstraction: a real satellite separates the
+platform power system from the compute payload, and a higher-fidelity power model
+is left to future work. We calibrate the peak bound $\hat{P}_{im}^{\text{CP}}$ as
+the maximum per-inference peak observed over the benchmark, a conservative upper
+bound appropriate for a hard constraint that must never be violated. Among the
+deployed configurations only the 7B tier shows a sharp transient: its peak reaches
+6.37\,W against a 3.77\,W median (a $1.9\times$ ratio), traced to a sustained
+compute-bound prefill phase, whereas the 2B and 3B peaks (3.75 and 4.02\,W) sit
+close to their own high quantiles. The 7B peak plus a few-watt platform baseline
+approaches the 15\,W budget, so a scheduler that commits the split without
+checking the peak can drive the combined draw past the cap. This is the empirical
+basis for the per-slot peak shield.
+
+\subsection{Simulation Setup}\label{EV_SETUP}
+Each slot is $\tau{=}1$\,s; one orbit is 5700 slots (60\% sunlit, 40\% eclipse) and
+we run three orbits. The constellation has four computing satellites and six
+sensing sources with heterogeneous, data-driven quality profiles taken from the
+per-category RESISC45 measurements. The platform baseline continuously draws
+$P_{\text{base}}$ from the battery; in eclipse it is borne entirely by the battery
+and forms the bulk of the eclipse energy budget. We take $P_{\text{base}}{=}7$\,W
+as a nominal value in the reported CubeSat range (3--10\,W for attitude control and
+housekeeping) and sweep it in Section~\ref{EV_SENS}; the solar panel
+($P^{\text{solar}}{=}13$\,W) yields an orbit-average harvest just above the
+platform draw, leaving a thin margin for paced inference, and the battery
+(18\,kJ) is sized to carry the platform through eclipse. All policies draw from
+one shared feasible set (split included, the ISL handoff check, the per-slot
+energy check, and the peak check), so they differ only in the selection rule;
+quality ties are broken uniformly at random.
+
+\subsection{Constrained-Fair Comparison}\label{EV_MULTI}
+Fig.~\ref{fig:frontier} and Table~\ref{tab_split} report the four-satellite
+comparison on the quality-fairness plane (10-seed means). The proposed scheduler
+is not a single point but a curve swept by the Lyapunov weight $V$: small $V$
+favours the max-min objective (min-fill up to 0.175), large $V$ favours total
+throughput (up to 3850), and we pin no single $V$. The baselines are fixed points.
+The reading is threefold. First, the proposed scheduler is the only policy that is
+simultaneously deployable and able to run the 7B split: it holds downtime at 0.4\%
+across the whole $V$ range while running 179 to 206 splits, whereas the two other
+deployable policies (Greedy-E and Static) never split. Second, at small $V$ it
+exceeds the fair baseline Greedy-E on min-fill (0.175 versus 0.156, a $5\sigma$
+gap) at comparable total quality (3254 versus 3193, a difference within
+$1.6\sigma$, not significant). Third, the policies that reach both high fairness and high throughput
+(Greedy-Q at min-fill 0.398, Random at 0.354) do so only by blacking out (7.0\% and
+5.3\% downtime), which violates the uptime service-level agreement (SLA); the
+deployability partition is invariant for any SLA threshold in the wide band
+$(0.8\%, 5.3\%)$. No policy reaches high fairness and high throughput while
+remaining deployable, which is the quality-fairness conflict made visible as the
+empty upper region of Fig.~\ref{fig:frontier}. Static reaches higher raw
+throughput (5102) at low fairness (0.119); the proposed scheduler trades this
+throughput for the ability to navigate to the fair region and to run the top tier.
+
+\begin{table}[!t]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{\label{tab_split}Four-satellite comparison (three orbits, 10-seed
+mean$\,\pm\,$std). All policies draw from the same shared feasible set. The
+proposed scheduler is reported at three values of the Lyapunov weight $V$ to show
+the fairness--throughput knob; no single $V$ is selected (Fig.~\ref{fig:frontier}).
+Blackout above the uptime SLA marks a policy undeployable.}
+\begin{tabular}{lcccccc}
+\toprule
+Policy & \makecell{Peak\\viol.} & \makecell{Down\\time} & \makecell{Serv.\\rate} & \makecell{7B\\splits} & \makecell{Min-\\fill} & \makecell{Total\\qual.} \\
+\midrule
+Proposed ($V{=}1$)   & 0 & 0.4\% & 0.525 & $206$ & $\mathbf{0.175}$ & $3254$ \\
+Proposed ($V{=}10$)  & 0 & 0.4\% & 0.526 & $201$ & $0.169$ & $3311$ \\
+Proposed ($V{=}100$) & 0 & 0.4\% & 0.534 & $179$ & $0.124$ & $3636$ \\
+\midrule
+Greedy-Q & 0 & \textbf{7.0\%} & 0.765 & 5299 & 0.398 & 6083 \\
+Greedy-E & 0 & 0.8\% & 0.780 & 0 & 0.156 & 3193 \\
+Random   & 0 & \textbf{5.3\%} & 0.778 & 3333 & 0.354 & 5022 \\
+Static   & 0 & 0.8\% & 0.780 & 0 & 0.119 & 5102 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Capability and Routing}\label{EV_ROUTE}
+The heterogeneity of the sources makes model choice a routing problem rather than a
+size ranking. To avoid selecting categories after seeing the data, we fixed a test
+in advance: a category requires the split-only 7B model if 3B scores at most 0.35,
+7B scores at least 0.70, and the difference is significant under a two-sided Fisher
+exact test after Benjamini-Hochberg correction across all 45 categories. Five
+categories pass. Four of them, however, are non-monotone in model size: the smaller
+2B model scores 0.79 to 0.89, 3B collapses to 0.04 to 0.34, and 7B recovers to 0.78
+to 0.83. This is a category-specific weakness of the 3B model, and because 2B also
+runs on a single satellite the best single-satellite option already serves these
+four. Under the stricter criterion that both single-satellite models fail
+($\max(\text{2B},\text{3B})\le 0.35$) while 7B reaches 0.70, which we mark as a
+deviation from the pre-registration, only one category (mountain) qualifies, and it
+passes Benjamini-Hochberg but not Bonferroni. The aggregate accuracy gain of 7B
+over 3B is only 0.093, and the per-category sample is small (19 to 41 images,
+$95\%$ interval about $\pm0.18$), so we rest the case for the split on the memory
+constraint rather than on any single category. The value of the data is that model
+size alone is a poor guide to configuration: most categories are served by a
+single-satellite model, several on which 3B fails are recovered by the smaller 2B,
+and the scheduler routes on the measured per-source quality rather than on size.
+
+\subsection{The Fairness--Throughput Conflict}\label{EV_VCONF}
+Fig.~\ref{fig:vconf} traces the two objectives against $V$. Total delivered quality
+rises with $V$, so the $O(1/V)$ improvement of Theorem~\ref{thm_gap} holds in the
+multi-satellite setting. Min-fill, in contrast, falls with $V$. This reverses its
+single-satellite behaviour, where min-quality rises with $V$ because there is no
+fairness conflict; here the heterogeneous sources create one. The reversal does not
+violate Theorem~\ref{thm_gap}, which bounds total quality rather than min-fill, and
+it makes explicit that $O(1/V)$ is a total-quality guarantee. The reversal is the
+$V$-space signature of the quality-fairness conflict.
+
+% ---- FLAGGED: to re-run with the locked config before final integration ----
+% \subsection{Sensitivity Analysis} (P_base sweep = the 7B feasibility boundary
+%   at ~8.63W; panel/battery/nsat sweeps) -- OLD-config numbers, MUST re-run.
+% \subsection{Dynamic ISL Topology} -- OLD-config, re-run.
+% \subsection{Stability Stress Tests} -- OLD-config, re-run.

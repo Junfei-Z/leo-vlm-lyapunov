@@ -131,9 +131,8 @@ lost safety.
 \subsection{Stability Stress Tests}\label{EV_STAB}
 Two experiments probe the guarantees directly. Fig.~\ref{fig:sim_timeseries} traces one satellite
 over three orbits: the energy virtual queue rises during each eclipse and recovers in sunlight, the
-battery cycles periodically, and the queues stay bounded, while Greedy-Q under the same orbit
-ratchets its battery down and blacks out -- the empirical signature of the robust stability of
-Theorem~\ref{thm_robust}. Fig.~\ref{fig:eclipse} varies the eclipse fraction: the time-average
+battery cycles periodically, and the queues stay bounded across all orbits, the empirical signature
+of the robust stability of Theorem~\ref{thm_robust}. Fig.~\ref{fig:eclipse} varies the eclipse fraction: the time-average
 Lyapunov backlog grows smoothly and stays bounded with zero violations across the range, the soft
 margin of the ISS condition. Fig.~\ref{fig:longhorizon} runs twenty orbits: the energy and power
 queues are mean-rate stable ($Q_s^E(T)/T\to1.5\times10^{-4}$, $Q_s^P(T)/T=0$) per

@@ -1,0 +1,61 @@
+% ============================================================================
+% CAPABILITY / ROUTING analysis — STAGING draft (5-block layered structure).
+% Anchors the paper's claim on the CONSERVATIVE reading; reports the
+% pre-registered result verbatim, then transparently supersedes it.
+% Numbers from the full 1300-image RESISC45 re-benchmark (2B=0.394, 3B=0.456,
+% 7B=0.549; per-class n=19-41, mean 28.9).
+% ============================================================================
+
+% ---- Block 1: pre-registered test + literal result ----
+We ask whether any scene categories require the split-only 7B configuration,
+that is, whether a single-satellite model is insufficient for them. To avoid
+selecting categories after seeing the data, we fixed the test in advance: a
+category requires 7B if the 3B model scores at most 0.35, the 7B model scores
+at least 0.70, and the difference is significant under a two-sided Fisher exact
+test after Benjamini-Hochberg correction across all 45 categories. On the full
+1300-image benchmark (19 to 41 images per category, mean 28.9), five categories
+pass: parking\_lot, freeway, mobile\_home\_park, industrial\_area, and mountain.
+
+% ---- Block 2: non-monotonicity finding ----
+Four of these five expose a weakness of the test rather than a capability gap.
+On parking\_lot, freeway, mobile\_home\_park, and industrial\_area the accuracy
+is not monotone in model size: the smaller 2B model scores 0.79 to 0.89, the 3B
+model drops to 0.04 to 0.34, and 7B recovers to 0.78 to 0.83. This is a
+category-specific weakness of the 3B model, not a sign that the category needs
+7B. Because 2B also runs on a single satellite and costs less, the best
+single-satellite option already serves these four categories.
+
+% ---- Block 3: max(2B,3B) re-analysis, LABELED as a pre-registration deviation ----
+The pre-registered test used 3B as the single-satellite baseline. The quantity
+relevant to the scheduler is instead the best accuracy reachable by any
+single-satellite model, $\max(\text{2B},\text{3B})$. We therefore report a
+stricter reanalysis, which we mark as a deviation from the pre-registration: a
+category requires 7B only if both single-satellite models fail
+($\max(\text{2B},\text{3B})\le 0.35$) while 7B reaches at least 0.70. Under this
+criterion only mountain qualifies (2B 0.19, 3B 0.33, 7B 0.78), and it passes
+Benjamini-Hochberg but not the stricter Bonferroni threshold. The aggregate
+accuracy gain of 7B over 3B is 0.093.
+
+% ---- Block 4: memory-necessity (main pillar) + routing pivot ----
+Two conclusions follow. First, the split pipeline is required for a reason that
+does not depend on any per-category result: a 4-bit 7B model with its vision
+encoder and key-value cache does not fit in the memory left on an 8\,GB
+satellite after the sensing pipeline, so the two-satellite split is the only way
+to run 7B at all. Second, the accuracy data show that model size alone is a poor
+guide to which configuration to use. Most categories are served well by a
+single-satellite model, one category needs 7B, and several categories on which
+3B fails are recovered by the smaller 2B. Selecting a configuration is therefore
+not "larger is better" but a routing problem over heterogeneous categories: the
+scheduler reasons over the measured per-configuration quality of each source
+rather than over model size, and it is this routing, together with energy
+sustainability, that the proposed method provides.
+
+% ---- Block 5: statistical caveats ----
+Two caveats bound these claims. The per-category sample is small (19 to 41
+images), so a single per-category accuracy carries a 95\% confidence interval of
+about $\pm0.18$; per-category necessity claims are fragile, and we rest the case
+for the split on the memory constraint rather than on any single category. The
+aggregate gain of 0.093 over 1300 paired images is likely significant, but
+significance is not necessity: it shows that 7B is better on average, not that
+any category cannot be served by a single satellite. We treat mountain as the
+one suggestive case and do not generalize from it.

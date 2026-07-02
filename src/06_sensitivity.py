@@ -35,9 +35,11 @@ HORIZON = N_ORBITS * N_SLOTS_PER_ORBIT             # 17100
 
 # ---------------- measured configs (Table I) ----------------
 CONFIGS = {
-    "2B": dict(T=1.24, E=3.93, Ppeak=4.15, Q=0.398, RAM=2.5),
-    "3B": dict(T=1.74, E=5.78, Ppeak=4.51, Q=0.464, RAM=3.5),
-    "7B": dict(T=2.76, E=9.13, Ppeak=5.57, Q=0.573, RAM=6.5),
+    # RESISC45 n=1300 calibration, all Q4. Ppeak = MAX per-inference peak (conservative
+    # bound for the hard cap); only 7B shows a real transient (6.37 vs ~3.8 for 2B/3B).
+    "2B": dict(T=1.24, E=3.93, Ppeak=3.75, Q=0.394, RAM=2.5),
+    "3B": dict(T=1.74, E=5.72, Ppeak=4.02, Q=0.456, RAM=3.5),
+    "7B": dict(T=2.76, E=9.30, Ppeak=6.37, Q=0.549, RAM=6.5),
 }
 for _m in CONFIGS.values():
     _m["N"] = int(np.ceil(_m["T"] / TAU))

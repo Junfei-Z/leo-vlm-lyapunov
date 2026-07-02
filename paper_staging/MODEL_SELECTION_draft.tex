@@ -1,0 +1,76 @@
+% ============================================================================
+% MODEL-SELECTION section — STAGING draft. Model 1 (shared power-budget
+% abstraction) locked. Numbers from full 7-model RESISC45 @ n=1300, all Q4.
+% Pairs with CAPABILITY_analysis_draft.tex (routing / non-monotonicity).
+% ============================================================================
+
+% ---- Calibration + Pareto (model selection) ----
+We profile seven vision-language models on RESISC45 (1300 images, 19 to 41 per
+category), each at 4-bit quantization on the Jetson Orin NX in its 15\,W power
+mode. Fig.~\ref{fig:tradeoff} places every model on the accuracy-energy plane.
+Four models lie on the Pareto frontier: Qwen2-VL-2B (0.394 accuracy, 3.93\,J),
+Qwen2.5-VL-3B (0.456, 5.72\,J), Qwen2.5-VL-7B (0.549, 9.30\,J), and InternVL3-8B,
+which reaches the highest accuracy (0.562) at the highest energy (15.00\,J). The
+remaining three are dominated: SmolVLM2-2.2B (0.310), InternVL2.5-4B (0.548), and
+gemma-3-4b (0.538, at 37.79\,J).
+
+We adopt the Qwen family as the deployment backbone for an architectural reason,
+not a per-point accuracy judgement. Qwen2-VL-2B, Qwen2.5-VL-3B, and
+Qwen2.5-VL-7B share one architecture and one activation interface, so they form a
+single three-tier ladder that maps directly onto the deployment tiers of this
+work: a light single-satellite model, a heavier single-satellite model, and a
+split-only model. Their uniform transformer-block structure also keeps the
+activation dimension constant at any partition point, which is the precondition
+for the two-stage split. InternVL3-8B is an isolated 8B model of a different
+architecture: it does not compose with the on-board 2B and 3B tiers into one
+routable family, its larger size is even less feasible on a single satellite, and
+splitting it is heavier. Its accuracy lead therefore does not change the
+deployment choice. InternVL2.5-4B is within statistical noise of Qwen2.5-VL-7B
+(0.548 versus 0.549). SmolVLM2-2.2B is the weakest model and is dominated by the
+smaller Qwen2-VL-2B, which shows that a model's frontier position is set by
+architecture and training rather than by parameter count alone.
+
+% ---- Memory-necessity (why the split) ----
+The split pipeline is required by a hardware constraint that does not depend on
+any accuracy comparison. A 4-bit Qwen2.5-VL-7B model, together with its vision
+encoder and key-value cache, does not fit in the memory left on an 8\,GB
+satellite after the on-board sensing pipeline. The two-satellite split is
+therefore the only way to run the 7B tier at all, which is what makes the
+pipeline necessary rather than optional.
+
+% ---- Peak-power calibration + the shared-budget abstraction ----
+The instantaneous power cap is the second structural constraint. We model it as a
+shared power budget of $P^{\text{cap}}{=}15$\,W, taking the Jetson 15\,W envelope
+as the nominal value; the platform baseline load $P_{\text{base}}$ and the
+inference peak draw from this budget. This is an abstraction: a real satellite
+separates the platform power system from the compute payload, and a higher-
+fidelity power-architecture model is left to future work. We calibrate the peak
+bound $\hat{P}_{im}^{\text{CP}}$ as the maximum per-inference peak observed over
+the benchmark, a conservative upper bound appropriate for a hard constraint that
+must never be violated. Among the deployed configurations, only the 7B tier
+shows a sharp transient: its peak reaches 6.37\,W against a 3.77\,W median (a
+$1.9\times$ ratio), traced to a sustained compute-bound prefill phase, whereas
+the 2B and 3B peaks (3.75 and 4.02\,W) sit close to their own high quantiles. The
+7B peak plus a platform baseline in the few-watt range approaches the 15\,W
+budget, so a scheduler that commits the split without checking the peak can drive
+the combined draw past the cap. This is the empirical basis for the per-slot peak
+shield.
+
+% ============================================================================
+% Table IV STRUCTURE (numbers pending the max-calibration + nominal-P_base re-run)
+% ----------------------------------------------------------------------------
+% Rows: Proposed, Greedy-Q, Greedy-E, Random, Static (all draw from the SAME
+%   shared feasible set; differ only in selection rule; random tie-break).
+% Columns (mean +/- std over 10 seeds):
+%   Policy | Peak viol. | Blackout (downtime) | Service rate | 7B splits |
+%   Min-fill (max-min) | Total quality
+% Reading (to hold after re-run):
+%   - Peak viol. = 0 for all (shared feasibility filters infeasible actions);
+%     the shield's value shows up in the P_base sweep, not here.
+%   - Proposed: 0 blackout, runs the 7B split, competitive min-fill.
+%   - Greedy-Q / Random: blackout heavily (undeployable) -> disqualified by SLA.
+%   - Greedy-E / Static: safe but never reach the 7B tier.
+%   - Report ALL metrics honestly, including where the proposed scheduler
+%     trades throughput for sustainability + top-tier reach (NOT a single-metric
+%     win; the claim is the deployable + top-tier-capable Pareto corner).
+% ============================================================================

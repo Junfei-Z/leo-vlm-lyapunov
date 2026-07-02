@@ -1,0 +1,52 @@
+% ============================================================================
+% CONTRIBUTIONS (C1-C4) rewrite + LIMITATIONS/scope — STAGING.
+% Anchors claims on framework + theory (regime-independent); empirical results
+% honestly scoped to the energy-constrained regime; comfortable-regime
+% domination by Random reported as a mechanism-backed limitation.
+% ============================================================================
+
+% ---- Contributions list (end of Introduction) ----
+\begin{itemize}
+  \item[\textbf{C1.}] \emph{First formulation.} We give the first joint formulation of
+  energy-aware collaborative vision-language model inference over solar-powered LEO
+  satellite networks, capturing a two-stage split pipeline across satellites, an
+  instantaneous peak-power cap, orbital eclipse energy dynamics, dynamic inter-satellite
+  links, and max-min quality fairness in one online optimization problem.
+
+  \item[\textbf{C2.}] \emph{Two-timescale robust scheduler.} We decompose the problem into
+  an offline integer program for model deployment and a lightweight per-slot online
+  scheduler based on drift-plus-penalty, with calibrated peak-power bounds obtained from
+  on-hardware profiling that make the per-slot power constraint checkable in closed form.
+
+  \item[\textbf{C3.}] \emph{Stability and optimality guarantees.} Using an input-to-state
+  stability argument, we prove the virtual queues stay bounded through zero-harvest eclipse
+  intervals, and we prove an $O(1/V)$ gap between the online total delivered quality and the
+  offline optimum. These guarantees are regime-independent.
+
+  \item[\textbf{C4.}] \emph{A quality-fairness conflict and a measurement-grounded study.}
+  Using real Jetson Orin NX measurements of seven vision-language models on RESISC45, we
+  identify a conflict between max-min fairness and total throughput that is specific to
+  heterogeneous multi-satellite operation and is made explicit through the Lyapunov weight.
+  Within this framework we show that on-board memory forces the top-quality tier to run only
+  as a two-satellite split, and we characterize the scheduler in the energy-constrained
+  regime, where it sustains top-tier inference that greedy policies cannot.
+\end{itemize}
+
+% ---- Limitations and Future Work (near the Conclusion) ----
+\subsection{Limitations and Future Work}\label{EV_LIM}
+Our empirical advantage is confined to the energy-constrained regime, and we state its scope
+precisely. The scheduler is the only deployable policy that runs the split when the battery is
+sized close to the eclipse requirement (Section~\ref{EV_SENS} shows this holds for a battery
+band just above the eclipse energy); when the battery is provisioned comfortably above that
+requirement, the reckless policies no longer black out, and a policy that splits at random can
+reach higher min-fill and total quality than our scheduler. The cause is a deliberate design
+choice with a known trade-off. Our energy virtual queue tracks the energy rate deficit, the
+standard virtual-queue construction that guarantees mean-rate sustainability and is correct in
+the energy-constrained regime. Because it tracks a rate deficit rather than the battery
+state-of-charge, it does not distinguish a full battery from a tight one and is therefore
+conservative when energy is abundant. Folding the state-of-charge into the drift, a
+battery-aware back-pressure term, is a natural extension that trades a more involved
+frame-based analysis for cross-regime adaptivity; we leave it to future work. Two further directions follow from the same analysis: a
+per-resource max-min penalty that optimizes fairness per unit of energy rather than per task,
+and a higher-fidelity power model that separates the platform power system from the compute
+payload rather than treating the peak cap as one shared budget.

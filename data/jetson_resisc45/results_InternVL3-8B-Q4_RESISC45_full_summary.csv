@@ -1,0 +1,2 @@
+model,dataset,n_images,accuracy,T_im_mean_s,T_im_p50_s,E_im_mean_J,Ppeak_p95_W
+InternVL3-8B-Q4,RESISC45_full,1300,0.5623076923076923,4.783986805402316,4.750438213348389,15.002610041307792,4.249

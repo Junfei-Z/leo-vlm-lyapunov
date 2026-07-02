@@ -30,8 +30,15 @@ FAMILY = {
 
 def load():
     rows = []
-    for f in sorted(glob.glob(os.path.join(DATA, "results_*_summary.csv"))):
+    # Use ONLY the n=1300 full re-benchmark summaries (one caliber for the whole paper);
+    # fall back to the older subset only if the full run is absent.
+    pat = "results_*_RESISC45_full_summary.csv"
+    files = sorted(glob.glob(os.path.join(DATA, pat)))
+    if not files:
+        files = sorted(glob.glob(os.path.join(DATA, "results_*_summary.csv")))
+    for f in files:
         d = pd.read_csv(f).iloc[0].to_dict()
+        d["model"] = str(d["model"]).replace("_RESISC45_full", "")
         rows.append(d)
     df = pd.DataFrame(rows)
     df = df.rename(columns={"accuracy": "Q", "T_im_mean_s": "T_s",
