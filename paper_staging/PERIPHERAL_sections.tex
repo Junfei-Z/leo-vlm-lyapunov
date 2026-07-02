@@ -1,0 +1,121 @@
+% ============================================================================
+% PERIPHERAL sections (sensitivity / ISL / stability) + mechanism Remark +
+% limitation update — STAGING. All numbers verified against the locked config
+% (P_base=7, P_solar=13, B_max=18000, max-Ppeak, Q_SRC spectrum, V not pinned,
+% seeds 7-16). Every load-bearing sentence was sealed in the joint review.
+% ============================================================================
+
+% ---- Mechanism Remark (insert in the methodology, after Algorithm 1) ----
+\begin{remark}\label{rem_reserve}
+In addition to the drift-plus-penalty rule, the proposed scheduler applies an
+eclipse-reserve guard: using the deterministic orbital forecast, it declines any
+action that would leave an involved satellite with less stored energy than the
+platform baseline load requires through the coming eclipse (scaled by a reserve
+fraction), and idles instead. The guard is part of the selection rule; the
+feasible action set itself is identical for all policies.
+\end{remark}
+
+% ============================ Sensitivity ============================
+\subsection{Sensitivity Analysis}\label{EV_SENS}
+We sweep the scenario parameters one at a time around the nominal point, each
+value over 10 seeds (Fig.~\ref{fig:sens}).
+
+\textbf{Platform baseline (the 7B feasibility boundary).} The peak constraint
+makes the platform load a hard gate for the top tier: the 7B split is feasible
+only while $P_{\text{base}} + 6.37 \le 15$\,W, that is, below about 8.6\,W. The
+sweep confirms the boundary empirically: at $P_{\text{base}}{=}6$\,W the
+scheduler runs 842 splits with zero downtime, at 7\,W it runs about 200, at
+8\,W the count collapses to 87, and at 9\,W the 7B tier drops out entirely.
+Beyond 9\,W the platform load alone exceeds what the panel sustains and every
+policy degrades. This boundary is set by the hardware cap and the measured 7B
+peak, not by a tuned parameter, and it is the empirical basis for the per-slot
+peak shield.
+
+\textbf{Battery capacity (the scope of the safety separation).} With the
+battery sized close to the eclipse requirement ($15{,}960$\,J at the nominal
+load), only the proposed scheduler and the two non-splitting baselines stay
+within a 5\% downtime service-level agreement, while the greedy splitters
+black out; this deployability partition is invariant for
+$B^{\max}\!\in\![16{,}000, 18{,}000]$\,J. It does not persist when the battery
+is provisioned generously: at $B^{\max}\!\ge\!19{,}000$\,J the reckless
+splitters no longer black out, and at $24{,}000$\,J Random reaches a higher
+min-fill than the proposed scheduler (0.367 versus 0.296) with negligible
+downtime. We report this boundary explicitly; Section~\ref{EV_LIM} analyzes
+its cause.
+
+\textbf{Other axes.} The solar-panel sweep shows the same energy story from the
+supply side (the sustainability floor sits at $P^{\text{solar}}\!\approx\!12$\,W
+for the 7\,W platform); under overload (arrival probability up to 0.7) every
+policy's min-fill falls while the proposed scheduler's downtime stays at 0.4\%
+throughout. The constellation-size sweep is discussed with the limitations: at
+16 satellites the proposed scheduler's min-fill is non-monotone, and an idle
+decomposition locates the direct cause in the eclipse-reserve guard of
+Remark~\ref{rem_reserve}, whose blocked slots grow from 423 to 1134 (of about
+7960 decision slots) while score-based idling slightly decreases; the
+interaction between the per-satellite reserve requirement and the constellation
+phase structure is left to the concurrent-scheduling extension.
+
+% ============================ Dynamic ISL ============================
+\subsection{Dynamic ISL Topology}\label{EV_ISL}
+To make the handoff constraint~\eqref{C_pipe_isl} bind, we replace the static
+topology with time-varying links of controllable availability
+$p_{\text{ISL}}$ (deterministic per-window connectivity, coherence window 300
+slots). As availability falls from 1.0 to 0.3 the number of 7B splits falls
+from 201 to 136, so the constraint genuinely binds. The loss concentrates
+entirely on the 7B-dependent source: mountain's fill drops from 0.165 to 0.154
+while every other source stays flat or rises slightly as standalone capacity
+flows back; min-fill falls accordingly from 0.169 to 0.157, total quality is
+unchanged, and downtime stays at 0.4\%. Under heterogeneous sources, ISL
+connectivity thus couples directly to the fairness of the top-tier-dependent
+source, rather than to throughput or safety.
+
+% ============================ Stability ============================
+\subsection{Stability Stress Tests}\label{EV_STAB}
+A twenty-orbit run (114{,}000 slots) probes the guarantees directly
+(Fig.~\ref{fig:stab20}). The battery settles into a periodic orbit-scale cycle,
+and the energy and quality virtual queues are mean-rate stable: their growth is
+sublinear and flattening, with $Q^E(T)/T \to 7.5\times10^{-4}$ and
+$Q^U(T)/T \to 1.7\times10^{-3}$ (mean backlogs reaching only 86.5 and 192.3
+after twenty orbits), while blackout stays below 0.1\% of satellite-slots. This
+is the empirical signature of the robust stability of Theorem~\ref{thm_robust}
+and the mean-rate guarantees of Theorem~\ref{thm_stable} under periodic
+zero-harvest eclipse intervals.
+
+% ============================ Limitation update ============================
+% (replace the corresponding sentences in CONTRIBUTIONS_limitation_draft.tex)
+\subsection{Limitations and Future Work}\label{EV_LIM}
+Our empirical advantage is confined to the energy-constrained regime, and we
+state its scope precisely, in two dimensions. First, battery capacity: the
+deployability separation holds for batteries sized close to the eclipse
+requirement ($B^{\max}\!\in\![16{,}000,18{,}000]$\,J) and disappears when the
+battery is provisioned generously, where a policy that splits at random reaches
+higher min-fill and total quality than our scheduler. An idle decomposition
+verifies the cause: in the generous regime the eclipse-reserve guard of
+Remark~\ref{rem_reserve} is essentially inactive (zero blocked slots at
+$24{,}000$\,J), and the conservatism comes entirely from the energy virtual
+queue, which tracks the energy rate deficit — the standard virtual-queue
+construction that guarantees mean-rate sustainability and is correct in the
+constrained regime. Because it tracks a rate deficit rather than the battery
+state of charge, it does not distinguish a full battery from a tight one and
+therefore throttles inference that a full battery could absorb. Folding the
+state of charge into the drift, a battery-aware back-pressure term, is a
+natural extension that trades a more involved frame-based analysis for
+cross-regime adaptivity; we leave it to future work. Second, constellation
+scale: at 16 satellites the same guard blocks about 2.7 times more decision
+slots than at 8, producing a non-monotone min-fill; a concurrent multi-satellite
+scheduler (the simulation commits one decision per slot, a conservative special
+case of the concurrent formulation) is the corresponding extension. Two further
+directions follow from the same analysis: a per-resource max-min penalty that
+optimizes fairness per unit of energy rather than per task, and a
+higher-fidelity power model that separates the platform power system from the
+compute payload rather than treating the peak cap as one shared budget.
+
+% ---- Setup addition (insert in EV_SETUP, after the shared-feasible-set sentence) ----
+% The simulation uses a serial scheduling implementation that commits one
+% decision per slot, corresponding to a centralized executor in which a lead
+% satellite collects state and broadcasts the decision. The abstraction is
+% identical for every policy, so it does not affect the fairness of the
+% comparison, but it means throughput does not scale linearly with
+% constellation size. The formulation itself (constraint~\eqref{C12}) admits
+% concurrent execution; the serial implementation is its conservative special
+% case, and concurrent multi-satellite scheduling is a natural extension.

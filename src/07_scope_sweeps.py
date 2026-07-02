@@ -12,17 +12,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("splitpipe", os.path.join(HERE, "04_split_pipeline.py"))
 M = importlib.util.module_from_spec(spec); sys.modules["splitpipe"] = M; spec.loader.exec_module(M)
 
-TOT = M.N_SAT * M.HORIZON
 SEEDS = list(range(7, 17))
 V_PROP = 10   # a fairness-favouring operating point; the paper reports the full V curve elsewhere
 POLICIES = ["Lyapunov (ours)", "Greedy-Q", "Greedy-E", "Random", "Static"]
 
 def metrics(name):
     V = V_PROP if name == "Lyapunov (ours)" else 100
+    tot = M.N_SAT * M.HORIZON          # dynamic: N_SAT may be swept
     b, mf, sp = [], [], []
     for sd in SEEDS:
         r = M.run_sim(M.POLICIES[name], V=V, seed=sd)
-        b.append(r["blackout_slots"] / TOT * 100); mf.append(r["min_fill"]); sp.append(r["split_tasks"])
+        b.append(r["blackout_slots"] / tot * 100); mf.append(r["min_fill"]); sp.append(r["split_tasks"])
     return np.mean(b), np.std(b), np.mean(mf), np.std(mf), np.mean(sp)
 
 def set_param(field, v):
@@ -44,6 +44,7 @@ SWEEPS = [
     ("battery","B_MAX",        [16000, 17000, 18000, 19000, 20000, 24000]),
     ("panel",  "P_SOLAR",      [11, 12, 13, 15, 18, 25]),
     ("arrival","ARRIVAL_PROB", [0.05, 0.10, 0.20, 0.40, 0.70]),
+    ("nsat",   "N_SAT",        [2, 4, 8, 16]),
 ]
 
 def main():
