@@ -31,9 +31,12 @@ def main():
 
     ax[1].plot(Varr, mean_gap, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7,
                label=r"normalized gap")
-    j0 = int(np.argmin(mean_gap))
+    # Anchor the 1/V guide in the decay regime (V=100). Anchoring at argmin picked
+    # the V=500 point where the gap is ~0, making c~0 and the guide invisible.
+    j0 = int(np.argmin(np.abs(Varr - 100)))
     c = mean_gap[j0] * Varr[j0]
-    ax[1].plot(Varr, c / Varr, "--", color=PALETTE["red_strong"], lw=2,
+    mask = Varr >= 20
+    ax[1].plot(Varr[mask], c / Varr[mask], "--", color=PALETTE["red_strong"], lw=2.5,
                label=r"$O(1/V)$ reference")
     ax[1].set_xscale("log")
     ax[1].set_ylim(0, float(mean_gap.max()) * 1.15)
