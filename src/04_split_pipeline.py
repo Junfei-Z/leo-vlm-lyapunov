@@ -69,8 +69,11 @@ SPLIT = dict(
     Q=CONFIGS["7B"]["Q"],          # quality credited when the rear stage completes
     N_front=int(np.ceil(CONFIGS["7B"]["N"] / 2)),
     N_rear=int(np.ceil(CONFIGS["7B"]["N"] / 2)),
-    E_front=CONFIGS["7B"]["E"] / 2,
-    E_rear=CONFIGS["7B"]["E"] / 2,
+    # MEASURED per-stage energy (window-attributed on the RPC split, 12 inferences:
+    # front 4.01 J / rear 4.74 J, split total 8.75 J vs monolithic 9.30 J). Replaces
+    # the former 50/50 assumption; single-device attribution caveat stated in the paper.
+    E_front=4.01,
+    E_rear=4.74,
     Ppeak=CONFIGS["7B"]["Ppeak"],
     RAM=CONFIGS["7B"]["RAM"] / 2,   # each satellite holds only half the model
 )

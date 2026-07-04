@@ -30,6 +30,7 @@ def lo_bytes():
     raise RuntimeError("no lo")
 
 def ask(path):
+    global t_req0, t_req1
     b64 = base64.b64encode(open(path, "rb").read()).decode()
     payload = json.dumps({"messages": [{"role": "user", "content": [
         {"type": "text", "text": PROMPT},
@@ -41,6 +42,7 @@ def ask(path):
     with urllib.request.urlopen(req, timeout=600) as resp:
         out = json.loads(resp.read())
     t1 = time.time()
+    t_req0, t_req1 = t0, t1
     return out["choices"][0]["message"]["content"].strip(), t1 - t0, len(payload)
 
 rows = list(csv.DictReader(open(IDX)))[:N + 2]
@@ -57,7 +59,7 @@ for r in rows[2:N + 2]:
     # subtract the HTTP request itself (image upload goes over lo too)
     rpc = b1 - b0 - req_bytes
     recs.append((r["path"].split("/")[-1], r["class_name"], ans.replace("\n", " ")[:40],
-                 dt, rpc))
+                 dt, rpc, t_req0, t_req1))
     print(f"{recs[-1][0][:28]:30s} {dt:6.2f}s  rpcB={rpc/1e6:7.3f}MB  ans={recs[-1][2]}")
 
 lat = [x[3] for x in recs]; rpc = [x[4] for x in recs]
@@ -66,6 +68,6 @@ print(f"latency  mean={sum(lat)/len(lat):.3f}s  min={min(lat):.3f}  max={max(lat
 print(f"rpcBytes mean={sum(rpc)/len(rpc)/1e6:.3f}MB min={min(rpc)/1e6:.3f} max={max(rpc)/1e6:.3f}")
 with open(f"/home/htj/split_bench_{TAG}.csv", "w", newline="") as f:
     w = csv.writer(f)
-    w.writerow(["img", "true", "answer", "latency_s", "rpc_bytes"])
+    w.writerow(["img", "true", "answer", "latency_s", "rpc_bytes", "t_start", "t_end"])
     w.writerows(recs)
 print("saved /home/htj/split_bench_%s.csv" % TAG)

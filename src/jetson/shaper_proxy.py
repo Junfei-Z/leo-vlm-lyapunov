@@ -33,13 +33,16 @@ def params():
             _params = (0.0, 0.0)
     return _params
 
-async def pump(reader, writer):
+BURST_LOG = open("/home/htj/rpc_bursts.log", "a", buffering=1)
+
+async def pump(reader, writer, tag=""):
     next_free = 0.0                        # link-busy horizon (rate pacing)
     try:
         while True:
             data = await reader.read(CHUNK)
             if not data:
                 break
+            BURST_LOG.write(f"{time.time():.4f} {tag} {len(data)}\n")
             rate, delay = params()
             now = time.monotonic()
             if rate > 0:
@@ -67,7 +70,7 @@ async def handle(cr, cw):
         sr, sw = await asyncio.open_connection(*TARGET)
     except OSError:
         cw.close(); return
-    await asyncio.gather(pump(cr, sw), pump(sr, cw))
+    await asyncio.gather(pump(cr, sw, 'c2s'), pump(sr, cw, 's2c'))
 
 async def main():
     if not os.path.exists(CONF):
