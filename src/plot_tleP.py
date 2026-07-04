@@ -50,9 +50,9 @@ d = np.load(os.path.join(DATA, "tleP_stability.npz"))
 qe, qu, b0 = d["qe"], d["qu"], d["b0"]
 t_h = np.arange(len(qe)) / 3600.0
 
-fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.6, 3.4), sharex=True)
+fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.6, 2.7), sharex=True)
 a1.plot(t_h, b0 / 1000.0, color=BLUE, lw=1.0)
-a1.set_ylabel("Battery [kJ]\n(sat 0)")
+a1.set_ylabel("Batt. [kJ]")
 a2.plot(t_h, qe, color=BLUE, lw=1.2, label=r"$\bar Q^E$")
 a2.plot(t_h, qu, color=RED, lw=1.2, label=r"$\bar Q^U$")
 a2.set_ylabel("Virtual queues")
