@@ -1,0 +1,2 @@
+W,tier,seed,down_pct,min_fill,splits,totQ,service,pkv,n_solves,solve_mean_s,solve_max_s,no_incumbent,run_wall_s
+half,oracle,10,1.591,0.1494,1230,2288.9,0.2849,0,285,0.12,0.63,0,74.9

@@ -50,6 +50,34 @@ style):** 45-source min-fill may be pinned by classes no model can serve
 or quantile view IN ADDITION to (never instead of) the raw min-fill. Fill
 distributions are captured per run so this needs no re-run.
 
+### Instrument record: servability threshold (full history, 2026-07-04)
+- ORIGINAL pre-registered rule: threshold = widest gap in sorted 7B
+  per-class accuracies (assumed bimodal spectrum).
+- FAILURE evidence: the spectrum is CONTINUOUS, not bimodal. Widest gap
+  0.093 falls mid-continuum between tennis_court (0.500) and chaparral
+  (0.593) -> threshold 0.546 -> 19/45 classes marked "unservable",
+  including church (0.49) -- a mainline source the scheduler demonstrably
+  serves (fill 0.166). Self-contradictory output. The 19/45 figure is kept
+  ON RECORD here (it does not enter the paper) to document that the rule
+  was replaced for semantic failure, not for yielding an inconvenient count.
+- REPLACEMENT (advisor-adjudicated, option A): unservable iff
+  max_m Q_im < U_tgt = 0.30. Three-fold justification, each independent:
+  (1) the failure is an objective contradiction, not an unfavorable result;
+  (2) U_tgt predates ALL 45-source data -- it is the formulation's own
+  per-arrival target, and "max_m Q < U_tgt implies the QU queue cannot be
+  stabilized even by the best model at full service" is a consequence of
+  the paper's queue dynamics (the negative side of the Slater condition),
+  not a statistical heuristic -- strictly, this criterion should have been
+  the original choice; (3) zero free parameters is preserved (0.30 was not
+  chosen, it was already on paper).
+- Result under the adopted criterion: 9/45 unservable (airplane, meadow,
+  overpass, palace, railway_station, snowberg, sparse_residential, terrace,
+  wetland; all three models in 0.00-0.28).
+- Paper wording (one sentence of instrument history): "a pre-registered
+  gap-based threshold was invalidated by the continuous (non-bimodal)
+  accuracy spectrum; we adopt the model-grounded criterion
+  max_m Q_im < U^tgt, which predates all 45-source data."
+
 ## Mechanics
 src/17_qsrc_anchor.py; jobs = {anchor6, src45} x {core, battery sweep
 [14000, 15000, 16580, 17500, 19000, 22000]}; outputs data/qsrc/*.csv.

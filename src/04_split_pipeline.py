@@ -103,14 +103,15 @@ VIS = [set(ALL_SATS) for _ in range(N_SOURCES)]   # full coverage (visibility no
 # mapping is fixed before any policy is run. For steep classes only the split-only 7B tier
 # delivers usable quality, so a scheduler that cannot sustainably run the split starves them.
 SRC_CLASS = ["beach", "intersection", "church", "baseball_diamond", "roundabout", "mountain"]
-Q_SRC = [
-    {"2B": 0.90, "3B": 0.90, "7B": 0.90},   # 0 beach            (flat: model size irrelevant)
-    {"2B": 0.40, "3B": 0.50, "7B": 0.70},   # 1 intersection     (mild gradient)
-    {"2B": 0.30, "3B": 0.60, "7B": 0.70},   # 2 church           (3B already helps a lot)
-    {"2B": 0.30, "3B": 0.70, "7B": 0.80},   # 3 baseball_diamond (3B helps, 7B a bit more)
-    {"2B": 0.30, "3B": 0.80, "7B": 0.90},   # 4 roundabout       (3B nearly enough)
-    {"2B": 0.20, "3B": 0.20, "7B": 0.80},   # 5 mountain         (only 7B helps; 2B/3B stuck)
-]
+# MEASURED per-class accuracy, loaded from the single source of truth
+# (data/q_src45.json, computed from the n=1300 per-image RESISC45 logs).
+# Replaces the former stylized values after the B1 anchor showed the stylized
+# mapping flips the deployable min-fill ordering (QSRC_anchor_prereg.md).
+import json as _json
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "..", "data", "q_src45.json")) as _f:
+    _Q45 = _json.load(_f)
+Q_SRC = [{m: _Q45[c][m] for m in ("2B", "3B", "7B")} for c in SRC_CLASS]
 HETERO = True   # False -> all sources use the config-only Q (homogeneous STEP-2 baseline)
 
 

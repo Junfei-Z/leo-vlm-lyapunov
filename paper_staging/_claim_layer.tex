@@ -1,0 +1,97 @@
+% CLAIM LAYER — FINAL FORM (advisor-pinned, 2026-07-04). Placeholders [*].
+% Structure locked; only numbers fill in when the MPC matrix lands.
+% Main claim = capability triple; min-fill demoted to band description;
+% Static+MPC = two-directional guard corroboration; orbit-lookahead future work.
+
+% ============ MAIN CLAIM (mainline subsection, replaces min-fill-optimality) ====
+Across the studied battery range the proposed scheduler is the only policy
+that simultaneously (i) meets the availability SLA at every operating point
+where any policy meets it, (ii) sustains the split-only 7B tier (the only
+deployable splitter: every other splitting policy violates the SLA wherever
+it splits at scale), and (iii) carries the ISS and $O(1/V)$ total-quality
+guarantees of Section~V. Each component of this claim is robust to the
+quality-mapping upgrade (the B1 anchor verified all three on measured
+per-class values) and none depends on the specific Q-values. Min-fill, by
+contrast, belongs to no single policy: the deployable min-fill leader
+migrates with the energy regime -- at [15]\,kJ the proposed scheduler is the
+only deployable policy at all; at the rule-sized point the non-adaptive 3B
+policy leads (0.194 versus 0.165, with double the downtime); from
+[19]\,kJ Random leads (0.336) as energy abundance removes the constraint
+that scheduling exists to manage. The proposed scheduler stays within
+[15]\% of the deployable leader through the tight and middle band and
+delivers [59--70]\% of Random's min-fill in abundance, at the lowest
+downtime of any policy at every point. We report this migration as a
+finding, and the evidence for it is cumulative: the leader moved when the
+battery size moved (the deployability band), moved again when the stylized
+quality mapping was replaced by measured per-class values, and differs in
+all three energy regimes -- min-fill under energy scarcity is a property of
+the regime, not of any scheduler.
+
+% ============ STATIC FINDING (own paragraph, mainline; regime-dependence) ====
+The strong showing of the non-adaptive 3B policy at the rule-sized point is
+itself informative, and it is trace-structural: under the simultaneous
+eclipse of the mainline the reserve guard idles the proposed scheduler on
+[2304] of [7963] decision opportunities, and a policy that simply ignores
+the eclipse forecast -- serving until the battery protection trips and
+paying [3.2]\% downtime -- converts the difference into service volume. On
+the phase-staggered contrast schedule the ordering reverts: the proposed
+scheduler's fairness end (min-fill [0.244]) dominates Static ([0.198])
+outright, because phase diversity restores the service windows the guard
+withholds under simultaneous eclipse -- with its schedule no longer idled,
+the proposed scheduler serves enough volume that Static's
+ignore-the-forecast dividend vanishes. The guard's cost is
+regime-dependent, which the limitations discussion takes up.
+
+% ============ GUARD TRIANGLE (limitations subsection, replaces/extends pillar 2) ====
+% NOTE (measured-value rerun): the MPC leg CHANGED. Under measured Q_SRC,
+% orbit-MPC wins min-fill 0.269 at the SAME 1.59% downtime as the proposed
+% scheduler (the stylized 2.39% margin-spending vanished; pattern check 0/10
+% everywhere). The MPC evidence now attributes the gap to LOOKAHEAD, not to
+% margin-spending; only Static still evidences margin-spending.
+Three independent measurements now triangulate the same conservatism. First,
+the rate-based energy queue is blind to the state of charge (idle
+decomposition: [2649] score idles at the mainline point). Second, the
+eclipse-reserve guard dominates the idle budget under simultaneous eclipse
+([2304] of [7963] opportunities blocked) and compresses the navigable $V$
+range. Third, two opponents expose what the conservatism leaves on the
+table, from opposite directions: the non-adaptive 3B policy spends the
+safety margin outright -- no lookahead, downtime [3.2]\% -- and converts it
+into service volume ([0.194] min-fill, [5576] total quality); orbit-window
+MPC, by contrast, needs no extra downtime at all ([1.59]\% on both) and
+still lifts min-fill to [0.269] purely by planning across the full
+sunlit--eclipse cycle -- fairness that was available inside the same safety
+envelope, which the per-slot rule with a fixed-fraction reserve cannot
+reach. A guard that grades its reserve by the state of charge is the direct
+design implication for the margin side; the lookahead side is measurably
+out of reach of any $O(1)$ per-slot rule (Section~[EV_MPC]).
+
+% ============ FUTURE WORK SENTENCE (conclusion; two-line structure with
+% measured boundaries -- the SoC-aware expected contribution is COMPRESSED
+% by the ablation: it can fix over-withholding, not the lookahead premium) ====
+The two evidence lines bound two distinct improvement directions. An
+SoC-aware guard addresses the over-withholding that the Static comparison
+and the contrast-schedule reversal expose -- its expected gain is bounded by
+what margin-spending recovers. It does not reach the orbit-lookahead
+premium: the window ablation of Section~[EV_MPC] shows that premium requires
+planning across the full sunlit--eclipse cycle even with full SoC access,
+guard exemption, and equal downtime ($W{=}$half MPC does not outperform the
+proposed scheduler) -- closing that part of the gap within $O(1)$ per-slot
+cost is an open question.
+
+% ============ Q_SRC DECLARATION REWRITE (system model / setup) ====
+Each sensing source monitors one land-cover class; its quality under
+configuration $m$ is the MEASURED per-class RESISC45 accuracy of that model
+(Q4, Jetson Orin NX, $n{=}1300$; per-class $n{\approx}29$), loaded from the
+measurement table with no rounding or merging. The six mainline classes are
+the fixed pre-declared spread of the difficulty spectrum; under the measured
+values one class (mountain, $0.19/0.33/0.78$) retains a hard dependence on
+the split-only 7B tier, while church exposes a model ceiling ($0.49$ for
+both 3B and 7B) that no scheduler can lift -- both facts are properties of
+the data that the evaluation inherits, not modeling choices.
+
+% ============ ABSTRACT / INTRO NUMBER SWAP SLOTS ====
+% abstract: min-fill numbers -> [0.165] (V=10 mainline), downtime 1.6\%,
+%   capability phrasing replaces "best min-fill among deployables".
+% intro C4: same capability phrasing; band-migration one-liner optional.
+% conclusion: [0.165/0.155] V-range numbers; V-collapse note unchanged in
+%   structure (guard-dominance numbers barely moved: 2306->2304, 2661->2649).

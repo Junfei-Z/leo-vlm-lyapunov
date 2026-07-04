@@ -14,9 +14,14 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from figstyle import apply_house_style, savefig_pub
 
-V     = [1, 3, 10, 30, 100, 300]
-TOTQ  = [3254, 3273, 3311, 3394, 3636, 3850]
-MINF  = [0.175, 0.173, 0.169, 0.158, 0.124, 0.118]
+# measured Q_SRC values, from data/contrast_frontier.csv (src/18)
+import csv as _csv
+_rows = [r for r in _csv.DictReader(open(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "data",
+    "contrast_frontier.csv"))) if r["label"] == "Proposed"]
+V     = [int(r["V"]) for r in _rows]
+TOTQ  = [float(r["totQ_mean"]) for r in _rows]
+MINF  = [float(r["minfill_mean"]) for r in _rows]
 
 def main():
     apply_house_style()

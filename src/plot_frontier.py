@@ -15,16 +15,16 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from figstyle import apply_house_style, savefig_pub
 
-# Proposed swept by V (V=1..300): (total_quality, min_fill)
-PROP = [(3254, 0.175, "1"), (3273, 0.173, "3"), (3311, 0.169, "10"),
-        (3394, 0.158, "30"), (3636, 0.124, "100"), (3850, 0.118, "300")]
-# Baselines: name, totQ, min_fill, downtime%, deployable
-BASE = [
-    ("Greedy-E", 3193, 0.156, 0.8, True),
-    ("Static",   5102, 0.119, 0.8, True),
-    ("Greedy-Q", 6083, 0.398, 7.0, False),
-    ("Random",   5022, 0.354, 5.3, False),
-]
+# measured Q_SRC values, read from data/contrast_frontier.csv (src/18)
+import csv as _csv
+_rows = list(_csv.DictReader(open(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "data", "contrast_frontier.csv"))))
+PROP = [(float(r["totQ_mean"]), float(r["minfill_mean"]), r["V"])
+        for r in _rows if r["label"] == "Proposed"]
+SLA = 5.0
+BASE = [(r["label"], float(r["totQ_mean"]), float(r["minfill_mean"]),
+         float(r["down_mean"]), float(r["down_mean"]) < SLA)
+        for r in _rows if r["label"] != "Proposed"]
 
 def main():
     apply_house_style()
@@ -45,13 +45,13 @@ def main():
         elif v == "300":
             ax.annotate("$V$=300", (x, y), textcoords="offset points",
                         xytext=(7, -8), fontsize=6.3, color=BLUE)
-    ax.set_xlim(2930, 6400)
+    ax.set_xlim(3050, 6750)
 
     for name, x, y, dt, dep in BASE:
         if dep:
             ax.scatter([x], [y], marker="s", s=42, c=GREEN, zorder=5,
                        label=name if name == "Static" else None)
-            off, ha = ((0, -15), "center") if name == "Greedy-E" else ((7, 2), "left")
+            off, ha = ((8, -3), "left") if name == "Greedy-E" else ((7, 2), "left")
             ax.annotate(name, (x, y), textcoords="offset points", xytext=off,
                         fontsize=7, ha=ha)
         else:
@@ -60,27 +60,23 @@ def main():
             ax.scatter([x], [y], marker="o", s=64, facecolors="none",
                        edgecolors=RED, linewidths=1.4, zorder=5)
             ax.scatter([x], [y], marker="x", s=44, c=RED, linewidths=1.6, zorder=6)
-            off, ha = ((-6, 7), "right") if name == "Greedy-Q" else ((7, -11), "left")
+            off, ha = ((-8, -16), "right") if name == "Greedy-Q" else ((2, -22), "center")
             ax.annotate("%s: %.1f%% downtime\n(SLA violated, undeployable)" % (name, dt),
                         (x, y), textcoords="offset points", xytext=off, fontsize=6.0,
                         color=RED, ha=ha)
 
     ax.annotate("high fairness + high throughput\nreachable only by blacking out",
-                xy=(4750, 0.205), fontsize=6.3, color=RED, ha="center", style="italic")
+                xy=(5350, 0.128), fontsize=6.3, color=RED, ha="center", style="italic")
 
     # ---- zoom inset: the fairness end (V=1/3/10 + Greedy-E), where the 5-sigma
     # min-fill gap over Greedy-E lives but the points overlap at full scale
     axins = ax.inset_axes([0.075, 0.56, 0.34, 0.40])
     axins.set_facecolor("white"); axins.patch.set_alpha(1.0)
     axins.plot(xs, ys, "-o", color=BLUE, lw=1.4, ms=4.5, zorder=4)
-    axins.scatter([3193], [0.156], marker="s", s=46, c=GREEN, zorder=5)
-    for x, y, v, off in [(3254, 0.175, "1", (-2, 6)), (3273, 0.173, "3", (5, 3)),
-                         (3311, 0.169, "10", (4, -3))]:
+    for (x, y, v), off in zip(PROP[:4], [(-2, 6), (5, 3), (4, -4), (-16, -9)]):
         axins.annotate("$V$=" + v, (x, y), textcoords="offset points",
                        xytext=off, fontsize=5.8, color=BLUE)
-    axins.annotate("Greedy-E", (3193, 0.156), textcoords="offset points",
-                   xytext=(4, -10), fontsize=5.8)
-    axins.set_xlim(3155, 3360); axins.set_ylim(0.148, 0.184)
+    axins.set_xlim(3520, 3740); axins.set_ylim(0.219, 0.252)
     axins.set_xticks([]); axins.set_yticks([])
     for sp in axins.spines.values():
         sp.set_visible(True); sp.set_color("0.4"); sp.set_linewidth(0.8)

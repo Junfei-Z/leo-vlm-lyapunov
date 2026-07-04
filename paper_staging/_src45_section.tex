@@ -1,0 +1,61 @@
+% 45-source extension subsection draft (B2, judged against the B1 anchor per
+% the pre-registered chain; presentation per the adopted U_TGT criterion).
+% Data: data/qsrc/src45_core.csv, src45_servable.csv, src45_battery*.csv.
+
+\subsection{Scaling the Source Set: All 45 Classes}\label{EV_SRC45}
+We extend the six-source mainline to all 45 RESISC45 classes with zero
+selection: the measured per-class accuracy table enters the simulation raw
+(no merging, no rounding), and the per-source arrival rate is scaled to
+$0.10 \times 6/45$ so the total offered load matches the mainline -- the
+source structure is the only moved variable. Nine classes are structurally
+unservable: their best model accuracy lies below the per-arrival target
+($\max_m Q_{im} < U^{\mathrm{tgt}} = 0.30$), so their fairness queues cannot
+be stabilized by any scheduler at any service rate. (A pre-registered
+gap-based threshold was invalidated by the continuous, non-bimodal accuracy
+spectrum; we adopt this model-grounded criterion, which predates all
+45-source data.) Raw min-fill is 0.000 for every policy -- pinned by the
+unservable classes, it degenerates into an indicator of their existence --
+so the informative metrics are the fill quantiles and the min-fill over the
+36 servable classes.
+
+The fine-grained source set restores the fairness differentiation that the
+six-source mainline compresses. Among the deployable policies the proposed
+scheduler is the only one that keeps every servable class alive
+(servable-set min-fill $0.058$ at $V{=}10$, against $0.000$ for both
+Greedy-E and Static): the simple policies starve servable classes
+structurally, not accidentally -- Greedy-E serves everything with the
+cheapest model and any class with 2B accuracy near zero receives no
+quality; Static serves everything with 3B and starves the three servable
+classes whose 3B accuracy is at most 0.04 (among them the split-dependent
+rectangular\_farmland, which the proposed scheduler sustains through the 7B
+pipeline). The reckless splitters reach higher servable-set min-fill
+(Greedy-Q 0.149, Random 0.081) but remain undeployable here as everywhere
+(6.2\% and 5.9\% downtime). The protection has its usual price: the
+proposed scheduler's median fill (0.183) and total quality (1580) sit below
+the simple policies' (Static 0.314/3777), the fairness--throughput conflict
+at fine granularity. One boundary case documents what the servability
+criterion does and does not classify: palace ($\max_m Q = 0.28$, just below
+$U^{\mathrm{tgt}}$) is unservable yet not unserved -- its unstable queue
+keeps demanding, and the max-min scheduler keeps feeding it service that
+cannot reach the target (fill 0.071). The criterion classifies queue
+stabilizability, not service.
+
+% ---- consistency note with the 6-source mainline (one sentence, honest) ----
+The six-source finding that Static leads deployable min-fill at the
+rule-sized point does not extend to fine granularity: it depended on every
+mainline class being 3B-viable (the six classes' 3B accuracies are all
+$\ge 0.33$), a property the full class set does not have.
+
+% ---- B2 JUDGMENT RECORD (not for the paper; for the advisor) ----
+% Judged against B1 anchor (6-source measured): graded skeleton transfers --
+% Greedy-Q/Random undeployable (6.2/5.9%), proposed deployable at 1.59%,
+% only deployable splitter. NEW at 45 sources: proposed becomes the unique
+% deployable policy with nonzero servable-set min-fill (max-min protection
+% visible again at fine granularity; the Static win is a coarse-granularity
+% artifact of universal 3B-viability). Diff-set check: all 8 starved classes
+% of proposed are unservable; no servable class starves under proposed
+% (no scheduling anomaly); palace is the unservable-but-served boundary case.
+% Static index-bias check: fill-index corr -0.53 exists (deterministic
+% max() tie-break, anti-strawman random tie-break was never extended to
+% Static's source choice), but the zero-fill verdicts are driven by 3B=0.00
+% classes -- structural, tie-break-independent. On record.

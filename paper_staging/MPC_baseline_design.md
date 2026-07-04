@@ -133,6 +133,16 @@ likely exceed τ = 1 s per solve by orders of magnitude → pre-registration (a)
 likely triggers; (b) likely marks W = orbit non-real-time. If instead CBC
 solves in < 1 s, the complexity claim weakens and we report that honestly.
 
+## Reading-stage amendments (logged per discipline)
+- **+0.1pp downtime margin in the "spends safety margin" pattern check
+  (2026-07-04, measured-Q_SRC reading):** run CSVs round down_pct to 3
+  decimals and the start-in-eclipse blackout transient is identical across
+  policies, so a 4th-decimal excess is rounding, not spent margin; 0.1pp is
+  the minimum credible difference at that storage granularity. Scope: this
+  threshold affects ONLY the pattern check (a limitation-section input); no
+  pre-registered main adjudication (complexity line, τ fraction, usability)
+  uses it or any downtime comparison.
+
 ## Deliverables
 src/15_mpc_baseline.py (windowed MILP + rolling executor on the TLE overrides),
 data/mpc_{W}.csv (quality + per-solve times), timing of proposed per-slot

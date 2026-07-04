@@ -158,6 +158,22 @@ def idle_decomposition():
     print("  idle decomposition (3-seed mean):",
           {k: round(v / 3) for k, v in agg.items()}, flush=True)
 
+SECTIONS = {}
+SECTIONS["core"] = core
+SECTIONS["pbase"] = lambda: sweep("pbase", lambda v: setattr(M, "P_BASE", float(v)), [6, 7, 8, 9, 10, 11])
+def _setB(v): M.B_MAX = float(v); M.B_INIT = 0.6 * float(v)
+SECTIONS["battery"] = lambda: sweep("battery", _setB, [14000, 15000, 16580, 17500, 19000, 22000])
+SECTIONS["panel"] = lambda: sweep("panel", lambda v: setattr(M, "P_SOLAR", float(v)), [11.0, 11.6, 12.2, 13.0, 14.5, 18.0])
+SECTIONS["arrival"] = lambda: sweep("arrival", lambda v: setattr(M, "ARRIVAL_PROB", float(v)), [0.05, 0.10, 0.20, 0.40, 0.70])
+SECTIONS["isl"] = isl_sweep
+SECTIONS["stability"] = stability
+SECTIONS["idle"] = idle_decomposition
+
+if __name__ == "__main__" and len(sys.argv) > 1:
+    print(f"=== TLE PRIMARY SECTION {sys.argv[1]} (measured Q_SRC) ===", flush=True)
+    SECTIONS[sys.argv[1]]()
+    sys.exit(0)
+
 if __name__ == "__main__":
     print("=== TLE PRIMARY BATCH (h=0.69, rule sizes) ===", flush=True)
     print("-- core --", flush=True); core()

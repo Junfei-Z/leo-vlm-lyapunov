@@ -50,7 +50,9 @@ def main():
                     "totQ_mean", "totQ_std", "down_mean"])
         w.writerows(rows)
     print("wrote", path)
-    assert abs(rows[-1][1] - 201) <= 15, "p_isl=1.0 must reproduce the sealed ~201 splits"
+    # re-sealed 2026-07-04 after the measured-Q_SRC upgrade (option 1, B1 anchor):
+    # p_isl=1.0 yields ~182 splits under measured values (old stylized seal ~201)
+    assert abs(rows[-1][1] - 182) <= 15, "p_isl=1.0 must reproduce the sealed ~182 splits (measured Q_SRC)"
     print("internal check ok: p_isl=1.0 reproduces the all-connected core")
 
 if __name__ == "__main__":

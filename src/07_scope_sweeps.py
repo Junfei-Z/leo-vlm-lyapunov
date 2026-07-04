@@ -48,7 +48,11 @@ SWEEPS = [
 ]
 
 def main():
+    import sys as _sys
+    only = _sys.argv[1] if len(_sys.argv) > 1 else None
     for tag, field, vals in SWEEPS:
+        if only and tag != only:
+            continue
         rows = []
         for v in vals:
             restore(); set_param(field, v)

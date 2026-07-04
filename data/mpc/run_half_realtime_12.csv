@@ -1,0 +1,2 @@
+W,tier,seed,down_pct,min_fill,splits,totQ,service,pkv,n_solves,solve_mean_s,solve_max_s,no_incumbent,run_wall_s
+half,realtime,12,1.591,0.1538,1238,2303.2,0.2887,0,285,0.11,0.55,0,71.7
