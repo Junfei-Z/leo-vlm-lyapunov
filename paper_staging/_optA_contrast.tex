@@ -1,0 +1,29 @@
+\subsection{Cross-Plane Contrast: the Conflict Under Phase Diversity}\label{EV_VCONF}
+This subsection is a controlled counterpart approximating a cross-plane
+deployment, where eclipse-phase diversity exists: the schedule staggers the
+four eclipse phases synthetically (0.60 sunlit fraction; sizing by the same
+rules, 13\,W and 18\,kJ; the handoff band ends are absorbed regardless).
+Phase diversity restores the room that simultaneous eclipse removes, and two
+things become visible that the mainline compresses. First, the
+fairness-throughput conflict itself: sweeping the Lyapunov weight traces a
+genuine frontier (Fig.~\ref{fig:frontier}), from a fairness end (min-fill
+0.175 at $V{=}1$, exceeding Greedy-E's 0.156 by $5\sigma$ at comparable total
+quality) to a throughput end (3850 at $V{=}300$); the policies that reach both
+high fairness and high throughput (Greedy-Q 0.398, Random 0.354) do so only by
+blacking out (7.0\% and 5.3\%), and the partition is invariant for any SLA in
+$(0.8\%, 5.3\%)$. Second, the $V$-space signature of the conflict
+(Fig.~\ref{fig:vconf}): total quality rises with $V$, so the $O(1/V)$
+improvement of Theorem~\ref{thm_gap} holds, while min-fill falls, reversing
+the conflict-free single-satellite behaviour; the reversal does not violate
+Theorem~\ref{thm_gap}, which bounds total quality rather than min-fill.
+Comparing the two settings: the graded picture survives contact with the real
+trace unchanged (reckless splitters undeployable, the proposed scheduler the
+only deployable splitter and best min-fill among deployables), while two
+things tighten -- the strict deployability partition narrows from a wide band
+to essentially the rule-derived sizes, and the $V$-navigable range compresses
+because the reserve guard dominates under simultaneous eclipse. On this
+schedule the constellation-size axis is also visible: at 16 satellites the
+same guard blocks about 2.7 times more decision slots than at 8, producing a
+non-monotone min-fill (the serial one-decision-per-slot implementation is the
+corresponding limitation).
+
