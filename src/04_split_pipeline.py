@@ -137,6 +137,10 @@ B_INIT  = 0.6 * B_MAX
 U_TGT = 0.30
 V_DEFAULT = 100.0
 QE_MODE = "V2"     # energy queue tracks inference vs harvest; platform safety via eclipse reserve
+HANDOFF_S = 0.0    # measured ISL activation-handoff time (netem-equivalent, net of
+                   # instrument overhead). 0 = legacy sealed behavior. If front compute
+                   # (T_7B/2) + HANDOFF_S exceeds the front window N_front*tau, the rear
+                   # start and the front occupation shift by one slot (slack overflow).
 RESERVE_FRAC = 0.85  # proposed keeps >= this fraction of the eclipse platform energy in reserve
 RNG_SEED = 7
 
@@ -385,11 +389,13 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
                 elif choice[0] == "split":
                     _, sf, sr, i = choice
                     # front stage occupies sf for N_front, rear occupies sr for N_rear
-                    busy_until[sf] = t + SPLIT["N_front"] - 1
+                    front_busy_s = CONFIGS["7B"]["T"] / 2.0 + HANDOFF_S
+                    extra = 0 if front_busy_s <= SPLIT["N_front"] * TAU else 1
+                    busy_until[sf] = t + SPLIT["N_front"] - 1 + extra
                     run_E_ps[sf] = SPLIT["E_front"] / SPLIT["N_front"]
                     run_P[sf] = SPLIT["Ppeak"]
-                    # rear starts right after front completes (Eq.15)
-                    rear_start = t + SPLIT["N_front"]
+                    # rear starts once the handoff completes (Eq.15 + measured handoff)
+                    rear_start = t + SPLIT["N_front"] + extra
                     busy_until[sr] = rear_start + SPLIT["N_rear"] - 1
                     run_E_ps[sr] = SPLIT["E_rear"] / SPLIT["N_rear"]
                     run_P[sr] = SPLIT["Ppeak"]
