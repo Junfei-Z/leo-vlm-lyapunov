@@ -1,0 +1,64 @@
+\subsection{Trace-Driven Verification on Real Ephemeris}\label{EV_TLE}
+The synthetic schedule above fixes the sunlit fraction and staggers the eclipse
+phases; both are approximations. To test what survives contact with a real
+constellation, we replace the schedule with traces propagated from a public
+Starlink TLE snapshot (SGP4, 550\,km shell, 1\,s steps): a physically gated
+pipeline selects four truly co-orbiting satellites of one plane (neighbor
+ranges ${\sim}1800$\,km, stable over the window; ISL availability 1.0) from the
+deepest-eclipse plane that admits a connected chain. The sizing rules of
+Section~\ref{EV_SETUP} are re-applied unchanged to the trace (panel =
+sustainability floor $\times1.114$, battery = eclipse need $\times1.128$), and
+the full battery and panel sweeps are re-run. We report what survived, what
+tightened, and why. Two structural facts emerge before any scheduling runs.
+First, intra-plane phase staggering and ISL connectivity are mutually
+exclusive: satellites a quarter-orbit apart are ${\sim}12{,}000$\,km apart with
+Earth in between, so a physically consistent single-plane chain consists of
+adjacent satellites, and eclipse then hits the whole chain nearly
+simultaneously. Any scheduling design that assumes a sunlit neighbor is always
+available inherits an assumption that does not hold within a plane. Second, the
+synthetic staggered schedule is therefore best read as an approximation of a
+cross-plane deployment, where phase diversity exists but the links crossing
+planes are exactly the intermittent ones (Section~\ref{EV_ISL}).
+
+Under the trace, the graded picture survives unchanged: Greedy-Q is
+undeployable across the entire battery range studied ($\ge 5.3\%$ downtime for
+$B^{\max}\in[14,22]$\,kJ), the proposed scheduler is deployable throughout and
+is the only deployable policy that runs the split, and Random becomes
+deployable and overtakes on min-fill once the battery is provisioned
+generously. What tightens is the strict partition (to essentially the
+rule-derived battery size) and the $V$-navigable range (the reserve guard
+dominates under simultaneous eclipse). The measured handoff of
+Section~\ref{EV_HANDOFF} is accounted in the split timing as a band: at
+$0.25$--$0.60$\,s (2--5\,ms one-way) the handoff is absorbed by the $0.625$\,s
+slack of the front window and every number is unchanged; at $0.69$\,s (the
+6\,ms/1800\,km end, extrapolated from the measured round-trip model) the rear
+start shifts by one slot, costing the proposed scheduler $0.010$ of min-fill
+($0.186$ to $0.176$) and eight percent of its splits, while the reckless
+splitters degrade more (Greedy-Q downtime $7.9\%$ to $9.1\%$) and the graded
+picture is unchanged.
+
+\subsection{Measured Split Handoff}\label{EV_HANDOFF}
+We execute the 7B split on the Jetson with the rear stage behind a real RPC
+boundary and shape the link in userspace to an $(R, D)$ ISL model (rates
+$\{0.1, 1, 10\}$\,Gbps, one-way delays $\{2, 5, 15\}$\,ms; the shaper affects
+only the RPC connection, and the model loads unshaped). The split output
+matches the monolithic model exactly (20/20). Two measured facts structure the
+cost. First, traffic: the prefill handoff is a constant $4.085$\,MB per
+inference and each decoded token adds $0.449$\,MB, of which the activation
+itself is only $1.23$\,MB and $7$\,KB respectively; the remainder is the RPC
+implementation (vocabulary logits and protocol), so an activation-only
+protocol would compress the traffic about $3\times$. Second, latency: fitting
+the nine shaped tiers yields ${\sim}56$ protocol round trips per inference, so
+the delay term ($\mathrm{RTT}\times$round-trips) dominates the transfer term
+at laser-class rates. At the intra-plane delays of our measured chain
+(2--6\,ms one-way) the net handoff is $0.25$--$0.69$\,s, the 6\,ms value
+extrapolated from the measured round-trip model: it exceeds the 5\% threshold
+pre-registered for parameter recalibration, so we account it in the split
+timing (band ends reported in Section~\ref{EV_TLE}), while the one-slot
+structural threshold is crossed only at cross-plane delays (15\,ms: $1.7$\,s),
+where the handoff consumes an additional slot; both effects are consistent
+with the intra- versus cross-plane structure of Section~\ref{EV_TLE}. The
+measurements are taken on a single device with two processes: link shaping is
+faithful, but inter-device effects beyond the link (rear-satellite cold start,
+memory-contention asymmetry) are not captured.
+

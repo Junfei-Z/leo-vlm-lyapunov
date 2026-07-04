@@ -1,0 +1,9 @@
+img,true,answer,latency_s,rpc_bytes
+airport_s0005002.png,airport,airport,3.0655770301818848,9194609
+dense_residential_s0005003.png,dense_residential,dense residential,3.393665313720703,10006280
+stadium_s0005004.png,stadium,stadium,3.392908811569214,10042598
+commercial_area_s0005005.png,commercial_area,airport,3.068767786026001,9145483
+sparse_residential_s0005006.png,sparse_residential,circular farmland,4.047977447509766,11836439
+chaparral_s0005007.png,chaparral,chaparral,3.6981892585754395,10939276
+railway_s0005008.png,railway,railway,3.3857481479644775,10042181
+basketball_court_s0005009.png,basketball_court,basketball court,3.709465265274048,10945795
