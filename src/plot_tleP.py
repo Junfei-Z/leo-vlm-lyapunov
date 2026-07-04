@@ -53,11 +53,15 @@ t_h = np.arange(len(qe)) / 3600.0
 fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.6, 2.7), sharex=True)
 a1.plot(t_h, b0 / 1000.0, color=BLUE, lw=1.0)
 a1.set_ylabel("Batt. [kJ]")
-a2.plot(t_h, qe, color=BLUE, lw=1.2, label=r"$\bar Q^E$")
-a2.plot(t_h, qu, color=RED, lw=1.2, label=r"$\bar Q^U$")
+a2.plot(t_h, qe, color=BLUE, lw=1.2)
+a2.plot(t_h, qu, color=RED, lw=1.2)
 a2.set_ylabel("Virtual queues")
 a2.set_xlabel("Time [h] (20 orbits)")
-a2.legend(loc="upper left", frameon=False)
+# inline labels next to the curves (the compact panel leaves no clear legend box)
+a2.annotate(r"$\bar Q^U$", xy=(20, qu[int(20*3600)]), xytext=(17.5, 660),
+            fontsize=9, color=RED)
+a2.annotate(r"$\bar Q^E$", xy=(26, 320), xytext=(25.2, 380),
+            fontsize=9, color=BLUE)
 for a in (a1, a2):
     a.grid(True, alpha=0.3)
 fig.tight_layout(pad=0.5)
