@@ -1,0 +1,120 @@
+% MPC baseline section draft (structure per advisor's final-judgment spec:
+% flip table as main table + price-list narrative + amortization-caliber
+% sentence + phase-mechanism sentence (orbit only) + limitation corroboration
+% + precise future-work sentence). Jetson numbers marked JTODO until the
+% paired re-solve lands.
+
+\subsection{Comparison with Model-Predictive Control}\label{EV_MPC}
+We benchmark against a model-predictive controller built to be the strongest
+fair opponent: a windowed MILP over $\Delta{=}30$\,s macro-slots that receives
+the same deterministic schedules the proposed scheduler can compute offline
+(sunlit, ISL, eclipse forecast) and the same causal state, with future
+arrivals entering only through the rate $\lambda$; it carries the same
+cross-window fairness memory (window objective $\max U$ s.t.\ $U \le D_i +
+\sum_{\text{window}} q_i$ with $D_i$ the negative of the $Q^U_i$ content); it
+is exempt from the eclipse-reserve guard, with battery safety left to its own
+optimization through a terminal condition (end-of-window charge must cover the
+platform to the next sunrise) and a planning-layer relaxation of the battery
+floor whose penalty (10 quality units per Joule) exceeds any action's
+quality-per-Joule by $43\times$. The relaxation exists only in the planning
+layer: at execution every MPC action passes the same shared feasibility
+oracle and the same safe-mode blackout accounting as every baseline. Plans
+re-solve every $R{=}60$\,s (CBC, 0.5\% MIP gap) under two declared regimes:
+\emph{real-time}, where the solve is capped at $R$ and the new plan takes
+effect only after the measured solve wall-clock has elapsed (the previous
+plan keeps executing meanwhile), and \emph{oracle}, where solve time is not
+charged to the simulation clock, an upper bound. Windows $W \in
+\{\text{half-eclipse } 1035\,\mathrm{s}, \text{eclipse } 2070\,\mathrm{s},
+\text{orbit } 5736\,\mathrm{s}\}$; 10 seeds throughout.
+
+% ---- MAIN TABLE (flip table) ----
+\begin{table}[!t]
+\caption{MPC versus the proposed scheduler on the TLE mainline (10 seeds).
+Solve statistics are per re-solve on the workstation; the $>\tau$ column is
+the fraction of solves exceeding the slot length $\tau=1$\,s.}
+\label{tab_mpc}
+\centering
+\begin{tabular}{llccccc}
+\toprule
+$W$ & regime & down\% & min-fill & tot.\ qual. & med/p95 [s] & $>\tau$ \\
+\midrule
+half    & real-time & 1.59 & $0.166{\pm}0.006$ & 1985 & 0.11/0.17 & 0\% \\
+half    & oracle    & 1.59 & $0.167{\pm}0.005$ & 1991 & 0.11/0.16 & 0\% \\
+eclipse & real-time & 1.59 & $0.176{\pm}0.006$ & 2297 & 0.23/1.21 & 5.3\% \\
+eclipse & oracle    & 1.59 & $0.176{\pm}0.004$ & 2290 & 0.23/1.09 & 5.3\% \\
+orbit   & real-time & 2.39 & $0.260{\pm}0.006$ & 3521 & 0.77/8.70 & 35.9\% \\
+orbit   & oracle    & 2.39 & $0.265{\pm}0.004$ & 3483 & 0.77/9.68 & 36.1\% \\
+\midrule
+\multicolumn{2}{l}{Proposed ($V{=}10$)} & 1.6 & $0.174$ & 2141 &
+\multicolumn{2}{c}{$27\,\mu$s per slot} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ---- flip narrative: the fairness premium belongs to orbit-scale lookahead ----
+The window sweep turns the comparison from a verdict into a mechanism
+(Table~\ref{tab_mpc}). With a half-eclipse window the MILP, holding full SoC
+visibility and the full per-window optimization machinery, does \emph{not}
+outperform the per-slot scheduler (min-fill 0.166 versus 0.174); with an
+eclipse-length window it ties (0.176); only when the window covers the full
+sunlit--eclipse cycle does a fairness premium open (0.265, with total quality
+3521 versus 2141). The premium is therefore attached to orbit-scale
+lookahead, not to SoC visibility or optimization power at matched horizons.
+Its price is measured by the same experiment: per-decision compute
+$4.5\times10^{3}$--$7.6\times10^{4}\times$ the proposed scheduler's
+$27\,\mu$s per-slot rule, a heavy-tailed solve-time distribution whose
+$\tau{=}1$\,s exceedance grows from 0\% (half) through 5.3\% (eclipse) to
+36\% (orbit, p95 $8.7$--$9.7$\,s, max 300\,s), and a reliance on a MILP
+solver on-board. The real-time and oracle regimes coincide throughout (the
+60\,s incumbent is already near-optimal, 0 incumbent failures, no solve with
+MIP gap above 50\%), so the orbit-tier premium is real rather than an
+artifact of uncharged solve time; by the pre-registered criterion every tier
+remains usable at the real-time budget on the workstation.
+
+% ---- amortization caliber sentence ----
+Two compute columns answer two different questions: amortized per executed
+slot the ratio shrinks mechanically with $W$ (one solve per 60 slots against
+a rule run every slot, $74\times$ at $W{=}$half), which measures the average
+compute bill; the per-decision figure and the $\tau$-exceedance fraction
+measure whether a decision is available \emph{on time}, and on-board
+scheduling is the latter problem -- a missed replanning cycle is a real
+failure mode, an average bill is not.
+
+% ---- phase mechanism (orbit only; eclipse reported as heavy tail, no mechanism) ----
+For the orbit tier the hard instances cluster at eclipse boundaries (median
+distance 163 slots versus 355 for all solves): the solves are slowest
+precisely when timely replanning matters most. The eclipse tier's tail shows
+no such clustering (638 versus 356) and is reported as heavy-tailed without a
+mechanism claim.
+
+% ---- Jetson paragraph (paired re-solve, pre-registered sampling) ----
+On the target device (Jetson Orin NX) we re-solve, per tier, ten windows
+drawn by a pre-registered rule (eight octile-median instances plus the two
+hardest) and pair them with unloaded workstation re-solves of the identical
+instances, both at the real-time budget (60\,s cap, 0.5\% gap). The verdict
+is carried by the body of the distribution, not the tail: on the device the
+orbit tier exceeds $\tau$ on \emph{all ten} instances (fastest 1.75\,s,
+mean 7.5\,s) -- the only window that wins fairness is never per-slot
+real-time on-board -- while half crosses on 1/10 and eclipse on 3/10. The
+distribution body transfers at ${\sim}3\times$ (device/workstation);
+per-instance hardness in the tail does not transfer at all (the
+workstation's hardest eclipse instance, 300\,s in the batch, solves in
+1.3\,s on the device, while a mid-stratum orbit instance grows from 3.3\,s
+to 24.3\,s): branch-and-bound trees are architecture-fragile, which is
+itself a deployment liability for on-board MILP and the reason the
+$\tau$-exceedance fraction, not any per-instance figure, is the declared
+real-time criterion.
+
+% ---- limitation corroboration (hook into the limitations discussion) ----
+% To be appended to the reserve-guard limitation pillar:
+The orbit-tier MPC also corroborates the guard's conservatism from the
+opponent's side: an optimizer permitted to spend the eclipse reserve chose a
+more aggressive energy policy (downtime 2.39\% versus 1.6\%, still inside the
+SLA) and converted it into min-fill 0.26 on all ten seeds.
+
+% ---- precise future-work sentence (conclusion / limitations) ----
+An SoC-aware guard may recover part of the fairness gap; however, the window
+sweep shows the premium is attached to orbit-scale lookahead rather than SoC
+visibility alone ($W{=}$half MPC, with full SoC access, does not outperform
+the proposed scheduler) -- closing the full gap within $O(1)$ per-slot cost
+is an open question.

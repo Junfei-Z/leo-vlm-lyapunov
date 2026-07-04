@@ -454,6 +454,8 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
     service_rate = tasks_started / max(1, arrivals_count.sum())
     return dict(
         log=log,
+        fill=fill,                    # telemetry only (per-source fill array)
+        arrivals_count=arrivals_count,
         pcap_violations=pcap_violations,
         blackout_slots=blackout_slots,
         uptime_frac=uptime,

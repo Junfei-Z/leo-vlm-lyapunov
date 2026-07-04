@@ -44,14 +44,79 @@ machinery, quantified, not spun.
   standard MPC end-of-horizon device and uses only information MPC is entitled
   to; without it any finite window drains the battery at the horizon edge (a
   strawman we decline to build). Declared, not tuned.
+- **Battery lower bound is SOFT (amendment declared before any run, after the
+  smoke test exposed it):** the trace starts in eclipse and B_init cannot carry
+  the platform to sunrise (sat0 shortfall 3478 J), so a hard b ≥ 0 makes every
+  blackout-doomed window infeasible and MPC would get NO plan precisely where
+  planning matters. The simulator gives every policy a recourse (safe-mode
+  load-shed + recharge); the MILP mirrors it as a slack z ≥ 0 on the battery
+  dynamics and terminal condition with penalty 10 quality-units/J — far above
+  the best quality-per-Joule of any action (0.9/3.93 ≈ 0.23), so slack is never
+  traded for inference; it only absorbs physically unavoidable shortfall.
+  Declared, not tuned.
+  **The relaxation exists ONLY in the planning layer.** Execution is the same
+  for every policy: the MPC executor is a policy closure inside the SAME
+  run_sim harness; every candidate action passes the SHARED feasible_actions()
+  oracle (per-slot energy incl. P_base, peak cap, ISL/handoff, visibility) and
+  the plan quota can only narrow that set, never widen it; battery depletion
+  triggers the same safe-mode blackout with the same downtime accounting as
+  all baselines. The MILP slack never reaches execution — plan extraction
+  yields action counts only, and the simulator's battery is its own state.
+  (Confirmed in code before any result was read; MPC runs log nonzero downtime
+  through exactly this path.)
 - **Planning grid:** macro-slots of Δ = 30 s inside the window (W/Δ = 35 / 69 /
   191 steps), execution on real 1 s slots following the plan; a plan step that
   becomes infeasible at execution (arrival realization mismatch) is repaired by
   dropping that action (no re-optimization between re-solves).
 - **Re-solve cadence:** R = 60 s (re-plan with fresh state), all tiers.
-- **Solver:** CBC via PuLP (same as the offline benchmark), per-solve time
-  limit 300 s wall; hitting the limit uses the incumbent and is logged (feeds
-  pre-registration (b)).
+- **Solver budget, TWO DECLARED VARIANTS (fix 1):**
+  * **Real-time tier:** per-solve cap = the re-plan interval (60 s); on timeout
+    the CBC incumbent (best feasible found) is executed. This is the standard
+    rolling-horizon engineering form and the fair opponent: no solve may act on
+    stale state.
+  * **Oracle tier:** solve time NOT charged to the simulation clock (unlimited
+    compute assumption; wall cap 300 s per solve for practicality), reported
+    separately as the performance UPPER BOUND. The gap between the two tiers is
+    the complexity claim made visible.
+  Both variants run for every W; prior (a) "MPC wins" is adjudicated on the
+  oracle tier, prior (b) "not real-time" on the real-time tier. CBC relative
+  MIP-gap tolerance 0.5% on both tiers (declared; the smoke test showed CBC
+  reaching gap < 1e-6 well inside the cap and then burning the remaining budget
+  proving optimality — the reported per-solve time is "time to a usable plan").
+  The tolerance goes into the paper's MPC description verbatim: "solved to
+  0.5% MIP gap".
+- **Carried-in deficit, exact form (fix 2):** the window objective is
+  max U subject to U ≤ D_i(t) + Σ_{window} q_i, for every source i, where
+  D_i(t) is the source's cumulative delivered quality up to t minus its
+  cumulative target (arrivals × U_tgt), i.e. the negative of our QU queue
+  content. MPC thus carries cross-window fairness memory equivalent to the
+  proposed scheduler's QU state; a window-local max-min (no D_i) is explicitly
+  rejected as a strawman.
+- **W = orbit variable account (fix 3):** 191 macro-slots × (48 standalone +
+  72 split-pair) binaries ≈ 23k binaries + 4×191 continuous battery variables.
+  Pre-registered usability criterion: if on the real-time tier the incumbent is
+  missing or its optimality gap exceeds 50% on more than 20% of re-solves, the
+  tier is declared "not usable at the real-time budget" and reported as such
+  (that outcome is itself evidence, not a discard).
+- **Timing venues:** the sweep runs on the workstation (trend numbers); a
+  sample of ≥10 windows per tier is re-solved on the Jetson for the real-time
+  criterion (deployment-consistent). Both reported.
+- **Jetson sampling rule (pre-registered BEFORE the matrix finished, after the
+  heavy-tail discovery):** per tier, 10 windows = 8 stratified + 2 hardest.
+  Pool = the seed-7 runs of both time-regimes for that tier (their exact solve
+  inputs recovered by deterministic replay). Stratified 8: sort the pool by
+  measured wall time, split into 8 equal-count strata, take the median-wall
+  instance of each (deterministic, no selection freedom). Hardest 2: the top-2
+  wall times in the pool (the eclipse-tier 300 s instance is in by construction).
+  Random-only sampling would measure the easy body and miss the tail that
+  decides the real-time verdict; post-hoc selection would be cherry-picking.
+- **Solve-time reporting is distribution-first (upgraded after the heavy-tail
+  discovery, before the matrix finished):** per tier median / p95 / max + the
+  FRACTION of solves over τ = 1 s (prior (b) is adjudicated on this fraction,
+  not on a single max). Hard windows (wall > τ) are phase-tagged with their
+  distance to the nearest eclipse boundary; the boundary-clustering sentence
+  enters the paper ONLY if the hard-window median distance is clearly below
+  the all-solve median.
 - **Runs:** TLE mainline primary config (rule sizes, measured energies,
   h = 0.69), seeds 7–16 where runtime allows; if a tier's full 10-seed cost is
   prohibitive, report fewer seeds for that tier EXPLICITLY (never silently).
