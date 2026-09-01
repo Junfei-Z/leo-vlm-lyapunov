@@ -34,6 +34,24 @@ def apply_house_style():
         "ps.fonttype": 42,
     })
 
+
+
+def apply_paper_style():
+    """Print-size style: canvas equals final printed width (3.5 in single column,
+    7.16 in text width), so font sizes below are the sizes on the page."""
+    apply_house_style()
+    mpl.rcParams.update({
+        "font.size": 8,
+        "axes.labelsize": 9,
+        "axes.titlesize": 9,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+        "legend.fontsize": 7.5,
+        "lines.linewidth": 1.4,
+        "lines.markersize": 3.6,
+        "axes.linewidth": 0.9,
+    })
+
 def savefig_pub(fig, path_pdf):
     fig.tight_layout(pad=2)
     fig.savefig(path_pdf, dpi=300, bbox_inches="tight")

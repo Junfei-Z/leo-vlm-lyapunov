@@ -13,20 +13,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from figstyle import apply_house_style, savefig_pub, PALETTE
+from figstyle import apply_house_style, apply_paper_style, savefig_pub, PALETTE
 
 # This Pareto scatter is a COMPACT single-column figure, not a big line plot, so we
 # override the house-style large fonts with publication sizes proportioned to the
 # figure — otherwise the 24pt labels dwarf the panel once it is shrunk to column width.
 def _compact_style():
-    mpl.rcParams.update({
-        "axes.labelsize": 10,
-        "axes.titlesize": 10,
-        "xtick.labelsize": 8.5,
-        "ytick.labelsize": 8.5,
-        "legend.fontsize": 7.5,
-        "lines.linewidth": 1.4,
-    })
+    apply_paper_style()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Dataset dir name via arg 1 (default RESISC45 if present, else EuroSAT). Output name carries it.
@@ -47,8 +40,8 @@ SHORT = {
 
 # per-model label offsets (pts) + alignment to de-clutter the ~0.55-accuracy cluster
 LOFF = {
-    "Qwen2-VL-2B-Q4": (5, -12), "Qwen2.5-VL-3B-Q4": (6, -3),
-    "Qwen2.5-VL-7B-Q4": (-6, 6), "InternVL2.5-4B-Q4": (4, -13),
+    "Qwen2-VL-2B-Q4": (5, -19), "Qwen2.5-VL-3B-Q4": (7, -17),
+    "Qwen2.5-VL-7B-Q4": (-8, 8), "InternVL2.5-4B-Q4": (5, -12),
     "InternVL3-8B-Q4": (-2, 8), "gemma-3-4b-Q4": (-2, 9), "SmolVLM2-2.2B-Q4": (7, -2),
 }
 LHA = {"Qwen2.5-VL-7B-Q4": "right", "InternVL3-8B-Q4": "center", "gemma-3-4b-Q4": "right"}
@@ -57,12 +50,19 @@ def main():
     apply_house_style()
     _compact_style()
     df = pd.read_csv(CSV)
-    fig, ax = plt.subplots(figsize=(3.6, 2.9))
+    # 8B is not deployable on the Jetson-class satellite and is excluded
+    df = df[df["model"] != "InternVL3-8B-Q4"]
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
 
-    # Pareto frontier line (sorted by energy)
+    # Pareto frontier as a staircase; shade the region it dominates
     pf = df[df["pareto"]].sort_values("E_J")
-    ax.plot(pf["E_J"], pf["Q"], "-", color=PALETTE["blue_main"], lw=1.6, zorder=1,
-            label="Pareto frontier")
+    xmax = float(df["E_J"].max()) * 1.6
+    xs = list(pf["E_J"]) + [xmax]
+    ys = list(pf["Q"]) + [float(pf["Q"].iloc[-1])]
+    ax.plot(xs, ys, drawstyle="steps-post", color=PALETTE["blue_main"], lw=1.6,
+            zorder=1, label="Pareto frontier")
+    ax.fill_between(xs, ys, 0.0, step="post", color=PALETTE["blue_main"],
+                    alpha=0.06, zorder=0)
 
     # frontier = filled dots; dominated = HOLLOW squares (so a dominated point that
     # nearly coincides with a frontier point, e.g. InternVL2.5-4B vs Qwen-7B, still
@@ -77,47 +77,22 @@ def main():
             continue
         ax.scatter(sub["E_J"], sub["Q"], zorder=3, label=lab, **style)
         for _, r in sub.iterrows():
-            if r["model"] == "InternVL2.5-4B-Q4":
-                continue                      # labelled inside the zoom inset instead
-            ax.annotate(SHORT.get(r["model"], r["model"]),
+            name = SHORT.get(r["model"], r["model"])
+            if r["pareto"]:
+                name += "\n%.2f s, %.2f W peak" % (r["T_s"], r["Ppeak_W"])
+            ax.annotate(name,
                         (r["E_J"], r["Q"]), textcoords="offset points",
                         xytext=LOFF.get(r["model"], (6, 4)), fontsize=6.5,
                         ha=LHA.get(r["model"], "left"))
 
-    ax.set_xlabel("Energy per inference  $\\mathbb{E}[E_{im}]$  (J)")
-    ax.set_ylabel("Accuracy  $Q_{im}$")
+    ax.set_xlabel(r"Energy per inference  $\mathbb{E}[E_{im}]$  (J)  $\downarrow$")
+    ax.set_ylabel(r"Accuracy  $Q_{im}$  $\uparrow$")
     ax.set_xscale("log")
     ax.grid(True, which="both", alpha=0.3)
     ax.set_ylim(0.27, 0.62)
     ax.legend(loc="lower left", bbox_to_anchor=(-0.02, 1.01), ncol=3, frameon=False,
               fontsize=6.3, handletextpad=0.3, columnspacing=0.8, borderaxespad=0)
 
-    # zoom inset: the 9-16 J cluster, where InternVL2.5-4B (0.548, 9.65 J) nearly
-    # coincides with Qwen-7B (0.549, 9.30 J) and would otherwise look on-frontier
-    axins = ax.inset_axes([0.555, 0.08, 0.43, 0.40])
-    axins.set_facecolor("white")
-    axins.patch.set_alpha(1.0)
-    axins.plot(pf["E_J"], pf["Q"], "-", color=PALETTE["blue_main"], lw=1.4, zorder=1)
-    p = df[df["pareto"]]
-    d = df[(~df["pareto"]) & (~df["failed"])]
-    axins.scatter(p["E_J"], p["Q"], c=PALETTE["blue_main"], marker="o", s=42,
-                  zorder=3, edgecolors="white", linewidths=0.5)
-    axins.scatter(d["E_J"], d["Q"], facecolors="none", marker="s", s=48,
-                  zorder=3, edgecolors=PALETTE["red_strong"], linewidths=1.3)
-    for name, xy, off, ha in [("Qwen2.5-VL-7B", (9.30, 0.549), (0, 7), "center"),
-                              ("InternVL2.5-4B", (9.65, 0.548), (0, -13), "center")]:
-        axins.annotate(name, xy, textcoords="offset points", xytext=off,
-                       fontsize=5.6, ha=ha)
-    # zoom ONLY the near-coincident pair: 7B (frontier) vs InternVL2.5-4B (dominated,
-    # visibly below the frontier segment); InternVL3-8B stays on the main axes
-    axins.set_xlim(8.9, 10.15); axins.set_ylim(0.5415, 0.5565)
-    axins.set_xscale("log")
-    axins.set_xticks([]); axins.set_yticks([])
-    axins.set_xticks([], minor=True)
-    for sp in axins.spines.values():
-        sp.set_visible(True)                 # house style hides top/right spines globally
-        sp.set_color("0.4"); sp.set_linewidth(0.8)
-    ax.indicate_inset_zoom(axins, edgecolor="0.4", lw=0.8)
     fig.tight_layout()
     savefig_pub(fig, OUT + ".pdf")
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight")

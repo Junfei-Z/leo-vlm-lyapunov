@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from figstyle import apply_house_style, savefig_pub
+from figstyle import apply_house_style, apply_paper_style, savefig_pub
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "..", "data")
@@ -25,11 +25,11 @@ PANELS = [
 ]
 POLS = ["Lyapunov (ours)", "Greedy-Q", "Greedy-E", "Random", "Static"]
 STYLE = {
-    "Lyapunov (ours)": dict(color="#0F4D92", marker="o", ls="-",  lab="Proposed"),
-    "Greedy-Q":        dict(color="#B64342", marker="s", ls=":",  lab="Greedy-Q"),
-    "Greedy-E":        dict(color="#2E7D32", marker="^", ls="--", lab="Greedy-E"),
-    "Random":          dict(color="#E58C00", marker="D", ls="-.", lab="Random"),
-    "Static":          dict(color="#555555", marker="v", ls=(0, (3, 1, 1, 1)), lab="Static"),
+    "Lyapunov (ours)": dict(color="#274C77", marker="o", ls="-",  lab="Proposed"),
+    "Greedy-Q":        dict(color="#B65C4A", marker="s", ls=":",  lab="QMax"),
+    "Greedy-E":        dict(color="#2A9D8F", marker="^", ls="--", lab="EMin"),
+    "Random":          dict(color="#C7952D", marker="D", ls="-.", lab="RFit"),
+    "Static":          dict(color="#6C757D", marker="v", ls=(0, (3, 1, 1, 1)), lab="Static"),
 }
 
 def load(tag):
@@ -49,38 +49,32 @@ PREFIX = "tleP_"
 OUTNAME = "tleP_sensitivity"
 
 def main():
-    apply_house_style()
-    mpl.rcParams.update({"axes.labelsize": 8.5, "axes.titlesize": 9,
-                         "xtick.labelsize": 7.5, "ytick.labelsize": 7.5,
-                         "legend.fontsize": 8, "lines.linewidth": 1.4,
-                         "lines.markersize": 3.6})
-    fig, axes = plt.subplots(2, 4, figsize=(10.5, 4.6))
+    apply_paper_style()
+    fig, axes = plt.subplots(2, 4, figsize=(7.16, 3.15))
     for j, (tag, xlab, xscale) in enumerate(PANELS):
         d = load(tag)
         for p in POLS:
             x, dn, dns, mf, mfs = d[p]
             xs = x * xscale if xscale else x
             st = STYLE[p]
+            z = 5 if st["lab"] == "Proposed" else 3
             axes[0, j].errorbar(xs, dn, yerr=dns, color=st["color"], marker=st["marker"],
-                                ls=st["ls"], capsize=2, elinewidth=0.8, label=st["lab"])
+                                ls=st["ls"], lw=1.1, ms=2.3, mew=0.6, capsize=1.5,
+                                elinewidth=0.6, alpha=0.9, zorder=z, label=st["lab"])
             axes[1, j].errorbar(xs, mf, yerr=mfs, color=st["color"], marker=st["marker"],
-                                ls=st["ls"], capsize=2, elinewidth=0.8, label=st["lab"])
-        axes[0, j].axhline(5.0, color="k", lw=0.9, ls="--", alpha=0.6)
-        if j == 0:
-            axes[0, j].annotate("5% SLA", xy=(0.03, 0.62), xycoords="axes fraction", fontsize=7)
+                                ls=st["ls"], lw=1.1, ms=2.3, mew=0.6, capsize=1.5,
+                                elinewidth=0.6, alpha=0.9, zorder=z, label=st["lab"])
+        axes[0, j].axhline(5.0, color="#525960", lw=0.9, ls="--", alpha=0.75)
         axes[0, j].set_title("(%s)" % "abcd"[j], loc="left", fontsize=9)
         axes[1, j].set_xlabel(xlab)
-        if tag == "nsat":
-            for ax in (axes[0, j], axes[1, j]):
-                ax.set_xscale("log", base=2)
-                ax.set_xticks([2, 4, 8, 16]); ax.set_xticklabels(["2", "4", "8", "16"])
-                ax.xaxis.set_minor_locator(mpl.ticker.NullLocator())
         for ax in (axes[0, j], axes[1, j]):
             ax.grid(True, alpha=0.3)
-    axes[0, 0].set_ylabel("downtime (%)")
-    axes[1, 0].set_ylabel("min-fill (max-min)")
+    axes[0, 0].set_ylabel(r"downtime (\%) $\downarrow$")
+    axes[1, 0].set_ylabel(r"max-min quality $\uparrow$")
     handles, labels = axes[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=5, frameon=False,
+    sla = mpl.lines.Line2D([], [], color="#525960", lw=0.9, ls="--", alpha=0.75)
+    handles.append(sla); labels.append("5% SLA")
+    fig.legend(handles, labels, loc="upper center", ncol=6, frameon=False,
                bbox_to_anchor=(0.5, 1.02))
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     out = os.path.join(HERE, "..", "figures", OUTNAME)

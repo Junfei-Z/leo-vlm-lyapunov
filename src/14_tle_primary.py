@@ -71,7 +71,8 @@ def stat(name, V):
     return dict(down=np.mean(a["blackout_slots"]) / TOT * 100,
                 down_sd=np.std(a["blackout_slots"]) / TOT * 100,
                 mf=np.mean(a["min_fill"]), mf_sd=np.std(a["min_fill"]),
-                sp=np.mean(a["split_tasks"]), tq=np.mean(a["total_quality"]),
+                sp=np.mean(a["split_tasks"]), sp_sd=np.std(a["split_tasks"]),
+                tq=np.mean(a["total_quality"]),
                 sv=np.mean(a["service_rate"]), pkv=np.mean(a["pcap_violations"]))
 
 def save(tag, rows, hdr):
@@ -107,7 +108,7 @@ def sweep(tag, setter, values):
 def isl_sweep():
     WINDOW = 300
     rows = []
-    for p in [0.3, 0.5, 0.7, 0.85, 1.0]:
+    for p in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
         apply_primary()
         def isl(t, s1, s2, _p=p):
             if s1 == s2 or not BASE_ISL[min(t, T - 1), s1, s2]:
@@ -118,9 +119,9 @@ def isl_sweep():
             return (h / 0xFFFFFFFF) < _p
         M.isl_connected = isl
         st = stat("Lyapunov (ours)", 10)
-        rows.append([p, st["sp"], st["mf"], st["mf_sd"], st["tq"], st["down"]])
+        rows.append([p, st["sp"], st["sp_sd"], st["mf"], st["mf_sd"], st["tq"], st["down"]])
         print(f"  p_isl={p} done", flush=True)
-    save("isl", rows, ["p_isl", "split_mean", "minfill_mean", "minfill_std", "totQ_mean", "down_mean"])
+    save("isl", rows, ["p_isl", "split_mean", "split_std", "minfill_mean", "minfill_std", "totQ_mean", "down_mean"])
 
 def stability():
     apply_primary()
@@ -162,9 +163,9 @@ SECTIONS = {}
 SECTIONS["core"] = core
 SECTIONS["pbase"] = lambda: sweep("pbase", lambda v: setattr(M, "P_BASE", float(v)), [6, 7, 8, 9, 10, 11])
 def _setB(v): M.B_MAX = float(v); M.B_INIT = 0.6 * float(v)
-SECTIONS["battery"] = lambda: sweep("battery", _setB, [14000, 15000, 16580, 17500, 19000, 22000])
-SECTIONS["panel"] = lambda: sweep("panel", lambda v: setattr(M, "P_SOLAR", float(v)), [11.0, 11.6, 12.2, 13.0, 14.5, 18.0])
-SECTIONS["arrival"] = lambda: sweep("arrival", lambda v: setattr(M, "ARRIVAL_PROB", float(v)), [0.05, 0.10, 0.20, 0.40, 0.70])
+SECTIONS["battery"] = lambda: sweep("battery", _setB, [14000, 15000, 16000, 17000, 18000, 19000, 20000, 21000, 22000])
+SECTIONS["panel"] = lambda: sweep("panel", lambda v: setattr(M, "P_SOLAR", float(v)), [11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0])
+SECTIONS["arrival"] = lambda: sweep("arrival", lambda v: setattr(M, "ARRIVAL_PROB", float(v)), [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70])
 SECTIONS["isl"] = isl_sweep
 SECTIONS["stability"] = stability
 SECTIONS["idle"] = idle_decomposition
@@ -180,9 +181,9 @@ if __name__ == "__main__":
     print("-- pbase --", flush=True); sweep("pbase", lambda v: setattr(M, "P_BASE", float(v)), [6, 7, 8, 9, 10, 11])
     print("-- battery --", flush=True)
     def setB(v): M.B_MAX = float(v); M.B_INIT = 0.6 * float(v)
-    sweep("battery", setB, [14000, 15000, 16580, 17500, 19000, 22000])
-    print("-- panel --", flush=True); sweep("panel", lambda v: setattr(M, "P_SOLAR", float(v)), [11.0, 11.6, 12.2, 13.0, 14.5, 18.0])
-    print("-- arrival --", flush=True); sweep("arrival", lambda v: setattr(M, "ARRIVAL_PROB", float(v)), [0.05, 0.10, 0.20, 0.40, 0.70])
+    sweep("battery", setB, [14000, 15000, 16000, 17000, 18000, 19000, 20000, 21000, 22000])
+    print("-- panel --", flush=True); sweep("panel", lambda v: setattr(M, "P_SOLAR", float(v)), [11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0])
+    print("-- arrival --", flush=True); sweep("arrival", lambda v: setattr(M, "ARRIVAL_PROB", float(v)), [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70])
     print("-- isl --", flush=True); isl_sweep()
     print("-- stability --", flush=True); stability()
     print("-- idle --", flush=True); idle_decomposition()

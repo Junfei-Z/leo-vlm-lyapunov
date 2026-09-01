@@ -8,27 +8,21 @@ This is the main experiment. It adds two-stage pipeline splitting on top of the
 multi-satellite scenario.
 
 KEY STRUCTURAL FACT (paper contribution C1):
-  The largest model (8B) does NOT fit in a single satellite's RAM. To run it, the
-  model must be SPLIT into a front stage and a rear stage executed on TWO different
-  ISL-connected satellites: the front satellite runs the first blocks and passes the
-  intermediate hidden states over the ISL to the rear satellite (paper Eq.14-16).
+  The largest deployed model (Qwen2.5-VL-7B) does NOT fit in a single satellite's
+  RAM. To run it, the model must be SPLIT into a front stage and a rear stage
+  executed on TWO different ISL-connected satellites: the front satellite runs the
+  first blocks and passes the intermediate hidden states over the ISL to the rear
+  satellite (paper pipeline constraints). The split reaches the top quality tier
+  (Q=0.549 on RESISC45); the best standalone tier is 3B (Q=0.456).
 
-  Therefore:
-    * Only a scheduler that can ORCHESTRATE the split (choose a front sat, a rear
-      sat, and verify ISL connectivity at the handoff slot) can run 8B and obtain
-      its highest quality (Q=0.51).
-    * Greedy / Random / fixed baselines cannot organize a cross-satellite pipeline.
-      They are limited to single-satellite (standalone) configs, so the best quality
-      they can reach is 7B (Q=0.47). 8B is simply unavailable to them.
+  All policies (proposed, Greedy-Q, Greedy-E, Random) draw from the SAME feasible
+  action set, including the split; they differ only in the selection rule.
 
-  This gives the proposed scheduler a STRUCTURAL quality advantage that baselines
-  cannot match -- not a tuning artifact.
+Solar model: paper solar equation (deterministic sunlit indicator + small Gaussian
+perturbation), staggered per-satellite eclipse phases.
 
-Solar model: paper Eq.17 (deterministic delta + small Gaussian perturbation),
-staggered per-satellite eclipse phases.
-
-Calibration (T_im, E_im, Ppeak_im, Q_im) = REAL Jetson Orin NX / EuroSAT 224px / Q4.
-Split-stage costs are derived from the measured 8B totals (front/rear each ~half).
+Calibration (T_im, E_im, Ppeak_im, Q_im) = REAL Jetson Orin NX / RESISC45 / Q4.
+Split-stage costs are derived from the measured 7B totals (front/rear each ~half).
 """
 
 import os, sys
@@ -358,7 +352,8 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
     tasks_dropped = 0
 
     log = dict(t=[], battery=np.zeros((horizon, N_SAT)),
-               QE_mean=[], QU_mean=[])
+               QE_mean=[], QU_mean=[], QP_mean=[],
+               L_orbit_t=[], L_orbit=[], blackout_orbit=[], minb_orbit=[])
 
     for t in range(horizon):
         omega = np.zeros(N_SAT)
@@ -449,6 +444,14 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
         log["battery"][t, :] = b
         log["QE_mean"].append(QE.mean())
         log["QU_mean"].append(QU.mean())
+        log["QP_mean"].append(QP.mean())
+        if t % N_SLOTS_PER_ORBIT == 0:
+            log["L_orbit_t"].append(t)
+            log["L_orbit"].append(0.5 * (float((QE ** 2).sum())
+                                         + float((QU ** 2).sum())
+                                         + float((QP ** 2).sum())))
+            log["blackout_orbit"].append(int(blackout_slots))
+            log["minb_orbit"].append(float(b.min()))
 
     fill = delivered / np.maximum(1, arrivals_count)
     uptime = 1.0 - blackout_slots / (horizon * N_SAT)
@@ -468,6 +471,8 @@ def run_sim(policy_fn, V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED):
         mean_fill=fill.mean(),
         total_quality=delivered.sum(),
         avg_QE=float(np.mean(log["QE_mean"])),
+        avg_QU=float(np.mean(log["QU_mean"])),
+        QU_end=QU.copy(),
     )
 
 

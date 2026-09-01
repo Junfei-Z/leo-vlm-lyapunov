@@ -9,16 +9,12 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from figstyle import apply_house_style, savefig_pub
+from figstyle import apply_house_style, apply_paper_style, savefig_pub
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "..", "data")
 FIGS = os.path.join(HERE, "..", "figures")
-apply_house_style()
-mpl.rcParams.update({"axes.labelsize": 10, "axes.titlesize": 10,
-                     "xtick.labelsize": 8.5, "ytick.labelsize": 8.5,
-                     "legend.fontsize": 8, "lines.linewidth": 1.6,
-                     "lines.markersize": 4.5})
+apply_paper_style()
 BLUE, RED = "#0F4D92", "#B64342"
 
 # ---------------- tleP_isl ----------------
@@ -28,14 +24,16 @@ sp = [float(r["split_mean"]) for r in rows]
 mf = [float(r["minfill_mean"]) for r in rows]
 mfs = [float(r["minfill_std"]) for r in rows]
 
-fig, (a1, a2) = plt.subplots(1, 2, figsize=(4.6, 2.2))
-a1.plot(p, sp, "-o", color=BLUE)
+sps = [float(r["split_std"]) for r in rows]
+
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(3.5, 1.7))
+a1.errorbar(p, sp, yerr=sps, fmt="-o", color=BLUE, capsize=2, elinewidth=0.7)
 a1.set_xlabel(r"ISL availability $p_{\mathrm{ISL}}$")
-a1.set_ylabel("7B splits")
+a1.set_ylabel(r"7B splits $\uparrow$")
 a1.set_title("(a)", fontsize=9)
 a2.errorbar(p, mf, yerr=mfs, fmt="-s", color=RED, capsize=2)
 a2.set_xlabel(r"ISL availability $p_{\mathrm{ISL}}$")
-a2.set_ylabel("Min-fill")
+a2.set_ylabel(r"max-min quality $\uparrow$")
 a2.set_title("(b)", fontsize=9)
 for a in (a1, a2):
     a.grid(True, alpha=0.3)
@@ -50,7 +48,20 @@ d = np.load(os.path.join(DATA, "tleP_stability.npz"))
 qe, qu, b0 = d["qe"], d["qu"], d["b0"]
 t_h = np.arange(len(qe)) / 3600.0
 
-fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.6, 2.7), sharex=True)
+# eclipse shading from the TLE trace (satellite 0), tiled over the 20-orbit run
+_tr = np.load(os.path.join(DATA, "tle_traces.npz"))
+_sun = _tr["sunlit"][:, 0].astype(bool)
+_ecl = ~_sun[np.arange(len(qe)) % len(_sun)]
+_edges = np.flatnonzero(np.diff(_ecl.astype(int)))
+_starts = list(_edges[np.diff(_ecl.astype(int))[_edges] == 1] + 1)
+_ends = list(_edges[np.diff(_ecl.astype(int))[_edges] == -1] + 1)
+if _ecl[0]: _starts = [0] + _starts
+if _ecl[-1]: _ends = _ends + [len(_ecl)]
+
+fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.5, 2.6), sharex=True)
+for a in (a1, a2):
+    for x0, x1 in zip(_starts, _ends):
+        a.axvspan(x0 / 3600.0, x1 / 3600.0, color="0.55", alpha=0.16, lw=0)
 a1.plot(t_h, b0 / 1000.0, color=BLUE, lw=1.0)
 a1.set_ylabel("Batt. [kJ]")
 a2.plot(t_h, qe, color=BLUE, lw=1.2)
