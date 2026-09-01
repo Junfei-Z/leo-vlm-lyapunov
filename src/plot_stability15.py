@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Regenerate figures/tleP_stability.pdf (paper Fig. 5) from the U=0.15
-20-orbit run (data/tleP15_stability.npz).
+20-orbit run (data/tleP30_stability.npz).
 
 Three curves in three distinct colors (battery / energy queue / quality
 queue) with a single legend centered in the gap between the two subplots;
@@ -22,7 +22,7 @@ BATT = "#333333"      # battery
 QE = "#0F4D92"        # energy virtual queue (blue)
 QU = "#B64342"        # quality virtual queue (red)
 
-d = np.load(os.path.join(DATA, "tleP15_stability.npz"))
+d = np.load(os.path.join(DATA, "tleP30_stability.npz"))
 qe, qu, b0 = d["qe"], d["qu"], d["b0"]
 t_h = np.arange(len(qe)) / 3600.0
 

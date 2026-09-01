@@ -37,7 +37,7 @@ def read_boundary():
 
 def _probe(args):
     v, u, seed = args
-    apply_config(dict(U_TGT=float(u)))
+    apply_config(dict(RESERVE_FRAC=0.3, U_TGT=float(u)))
     r = M.run_sim(M.POLICIES["Lyapunov (ours)"], V=float(v), horizon=HORIZON, seed=seed)
     H = float(HORIZON)
     return dict(v=float(v), seed=seed, totq=float(r["total_quality"]),

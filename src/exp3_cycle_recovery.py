@@ -29,14 +29,14 @@ HORIZON = M.N_SLOTS_PER_ORBIT * (WARMUP + N_CYCLES)
 SEEDS = list(range(7, 17))
 FIT_FRAC = 0.6
 COV_REQ = 0.9
-U_TGT = 0.15
+U_TGT = 0.30
 OUT_RAW = os.path.join(HERE, "..", "data", "exp3_raw.npz")
 OUT_CSV = os.path.join(HERE, "..", "data", "exp3_cycle.csv")
 OUT_PDF = os.path.join(HERE, "..", "figures", "exp3_cycle.pdf")
 
 PANELS = [10.0, 11.0, 12.0, 13.0, 14.0]
 BATTS = [15.0, 17.0, 19.0, 21.0, 23.0]
-RESERVES = [0.8, 0.9, 1.0]
+RESERVES = [0.3, 0.4, 0.5]
 
 
 def fit_kappa_D(L):
@@ -80,7 +80,7 @@ def _probe(args):
 def main():
     apply_house_style()
     settings = [(p, b, rho) for p in PANELS for b in BATTS for rho in RESERVES]
-    settings.append((12.2, 16.6, 0.85))
+    settings.append((12.2, 16.6, 0.3))
     print(f"=== EXP3 cycle recovery (expectation form), U_tgt={U_TGT}, "
           f"{len(settings)} settings x {len(SEEDS)} seeds x {WARMUP + N_CYCLES} orbits ===", flush=True)
 
@@ -128,7 +128,7 @@ def main():
     nom = [r for r in rows if r["panel"] == 12.2 and r["battery"] == 16.6 and r["reserve"] == 0.85][0]
     fig, ax = plt.subplots(1, 2, figsize=(15, 6.2), gridspec_kw=dict(width_ratios=[1, 1.15]))
     # (a) nominal: seed-averaged trajectory envelope
-    rr = [r for r in res if (r["panel"], r["batt"], r["rho"]) == (12.2, 16.6, 0.85)]
+    rr = [r for r in res if (r["panel"], r["batt"], r["rho"]) == (12.2, 16.6, 0.3)]
     Ls = np.array([r["L"] for r in rr]); Lbar = Ls.mean(0)
     ax[0].plot(Lbar[:-1], Lbar[1:], "o-", ms=5, color=PALETTE["blue_main"], lw=1.8,
                label=r"seed-averaged $E[L(t_k)]$ trajectory")

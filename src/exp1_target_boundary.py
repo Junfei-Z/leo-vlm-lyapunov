@@ -40,7 +40,7 @@ OUT_PDF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "figure
 
 
 def _probe_one(u, seed):
-    apply_config(dict(U_TGT=float(u)))
+    apply_config(dict(RESERVE_FRAC=0.3, U_TGT=float(u)))
     r = M.run_sim(M.POLICIES["Lyapunov (ours)"], V=V, horizon=HORIZON, seed=seed)
     H = float(HORIZON)
     fill = np.asarray(r["fill"], float)
