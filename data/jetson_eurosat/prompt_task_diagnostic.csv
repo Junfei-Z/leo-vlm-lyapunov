@@ -1,0 +1,5 @@
+model,dataset,n,accuracy,note
+2B,EuroSAT,60,0.467,improved-prompt (old-prompt was 0.418)
+2B,RESISC45,90,0.378,improved-prompt
+8B,EuroSAT,60,0.567,improved-prompt (old-prompt was 0.51)
+8B,RESISC45,90,0.556,improved-prompt

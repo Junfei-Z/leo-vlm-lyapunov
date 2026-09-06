@@ -1,0 +1,21 @@
+img,true,answer,latency_s,rpc_bytes
+airport_s0005002.png,airport,airport,2.524183511734009,4533750
+dense_residential_s0005003.png,dense_residential,dense residential,2.7504935264587402,4982974
+stadium_s0005004.png,stadium,stadium,2.7503340244293213,4982004
+commercial_area_s0005005.png,commercial_area,airport,2.4970028400421143,4533594
+sparse_residential_s0005006.png,sparse_residential,circular farmland,3.2357985973358154,5880947
+chaparral_s0005007.png,chaparral,chaparral,3.002586603164673,5432467
+railway_s0005008.png,railway,railway,2.742260217666626,4983222
+basketball_court_s0005009.png,basketball_court,basketball court,3.003016948699951,5431747
+golf_course_s0005010.png,golf_course,golf course,2.988426685333252,5431896
+lake_s0005011.png,lake,lake,2.507206916809082,4533177
+river_s0005012.png,river,river,2.504239559173584,4534060
+forest_s0005013.png,forest,forest,2.5042734146118164,4533957
+chaparral_s0005014.png,chaparral,desert,2.7635629177093506,4982482
+commercial_area_s0005015.png,commercial_area,airport,2.5243616104125977,4534426
+baseball_diamond_s0005016.png,baseball_diamond,baseball diamond,2.9910197257995605,5432006
+parking_lot_s0005017.png,parking_lot,parking lot,2.9976465702056885,5431429
+wetland_s0005018.png,wetland,forest,2.5071847438812256,4534165
+sparse_residential_s0005019.png,sparse_residential,church,2.505504608154297,4534270
+tennis_court_s0005020.png,tennis_court,tennis court,2.996495008468628,5432055
+baseball_diamond_s0005021.png,baseball_diamond,baseball diamond,3.011962890625,5431798

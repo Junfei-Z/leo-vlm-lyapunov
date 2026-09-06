@@ -1,0 +1,49 @@
+% ============================================================================
+% P_BASE-IN-BATTERY formulation fix (STAGING — not yet merged into main.tex).
+% Reason: the platform baseline load P_base must drain the battery every slot
+% (physical). The old formulation only counted inference energy; not modeling
+% P_base is a reviewer-fatal gap. This corrects battery evolution, energy
+% feasibility, and the energy virtual queue CONSISTENTLY (all three), and gives
+% the corrected causal prose (replaces the wrong "P_base drains the battery").
+% Theorems 1/2/3 stand: P_base*tau is a bounded constant, drift bound stays finite.
+% ============================================================================
+
+% ---- Battery evolution (replaces Eq. 20): platform load drawn every slot ----
+\begin{equation}
+b_s^{t+1} = b_s^t + \omega_s^t
+   - \sum_{i,m} z_{ism}^t \frac{\mathbb{E}[E_{im}]}{N_{im}}
+   - P_{\text{base}}\,\tau, \qquad \forall s,t.
+\end{equation}
+
+% ---- Energy feasibility (replaces Eq. 21): current slot must survive platform + inference ----
+\begin{equation}
+\sum_{i,m} z_{ism}^t \frac{\mathbb{E}[E_{im}]}{N_{im}} + P_{\text{base}}\,\tau
+   \;\le\; b_s^t + \omega_s^t, \qquad \forall s,t.
+\end{equation}
+
+% ---- Energy virtual queue (replaces Eq. 28): back-pressure includes platform load ----
+\begin{equation}
+Q_s^E(t+1) = \max\!\Big\{\, Q_s^E(t)
+   + \sum_{i,m} z_{ism}^t \frac{\mathbb{E}[E_{im}]}{N_{im}}
+   + P_{\text{base}}\,\tau - \omega_s^t,\; 0 \,\Big\}.
+\end{equation}
+
+% ---- Companion prose (replaces the incorrect "P_base drains the battery") ----
+% The platform baseline load $P_{\text{base}}$ (sensing, communication, and
+% attitude-control subsystems) consumes battery energy every slot, independent
+% of inference. During sunlight it is covered by harvested power; during eclipse
+% ($\omega_s^t{=}0$) it is borne entirely by the battery and constitutes the bulk
+% of the eclipse energy budget ($P_{\text{base}}\,T_{\text{eclipse}}$). Accordingly,
+% the energy-feasibility constraint~\eqref{...} and the battery dynamics~\eqref{...}
+% unconditionally account for $P_{\text{base}}\,\tau$ in every slot, and the energy
+% virtual queue~\eqref{...} does so as well, so the scheduler senses this continuous
+% drain \emph{before} eclipse and throttles in advance. This term is the physical
+% root of the blackout separation: a greedy policy spends its sunlit charge on
+% high-quality inference and leaves no buffer for the platform's continuous
+% eclipse-side draw, depleting the battery mid-eclipse; the $Q_s^E$ queue instead
+% lets the proposed scheduler apply back-pressure early and stay sustainable.
+
+% ---- One-line reassurance for the analysis (add near Lemma 1 / drift constant B) ----
+% The platform term $P_{\text{base}}\,\tau$ is a bounded constant and therefore does
+% not affect the finiteness of the drift bound; Theorems~\ref{thm_...}--\ref{thm_...}
+% hold unchanged.

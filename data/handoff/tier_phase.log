@@ -1,0 +1,156 @@
+SWEEP_START 09:33:23
+TIER proxy0 rate=0Mbps delay=0ms 09:33:24
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             2.53s  rpcB=  9.066MB  ans=airport
+dense_residential_s0005003.p     2.77s  rpcB=  9.963MB  ans=dense residential
+stadium_s0005004.png             2.78s  rpcB=  9.964MB  ans=stadium
+commercial_area_s0005005.png     2.51s  rpcB=  9.066MB  ans=airport
+sparse_residential_s0005006.     3.26s  rpcB= 11.758MB  ans=circular farmland
+chaparral_s0005007.png           3.02s  rpcB= 10.860MB  ans=chaparral
+railway_s0005008.png             2.78s  rpcB=  9.962MB  ans=railway
+basketball_court_s0005009.pn     3.01s  rpcB= 10.860MB  ans=basketball court
+golf_course_s0005010.png         3.01s  rpcB= 10.861MB  ans=golf course
+lake_s0005011.png                2.52s  rpcB=  9.066MB  ans=lake
+== TAG=proxy0 N=10 maxtok=24
+latency  mean=2.819s  min=2.515  max=3.263
+rpcBytes mean=10.142MB min=9.066 max=11.758
+saved /home/htj/split_bench_proxy0.csv
+TIER r1000d2 rate=1000Mbps delay=2ms 09:34:01
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             2.73s  rpcB=  9.066MB  ans=airport
+dense_residential_s0005003.p     3.02s  rpcB=  9.984MB  ans=dense residential
+stadium_s0005004.png             3.04s  rpcB=  9.963MB  ans=stadium
+commercial_area_s0005005.png     2.73s  rpcB=  9.066MB  ans=airport
+sparse_residential_s0005006.     3.55s  rpcB= 11.816MB  ans=circular farmland
+chaparral_s0005007.png           3.29s  rpcB= 10.880MB  ans=chaparral
+railway_s0005008.png             3.01s  rpcB=  9.963MB  ans=railway
+basketball_court_s0005009.pn     3.28s  rpcB= 10.860MB  ans=basketball court
+golf_course_s0005010.png         3.29s  rpcB= 10.860MB  ans=golf course
+lake_s0005011.png                2.71s  rpcB=  9.066MB  ans=lake
+== TAG=r1000d2 N=10 maxtok=24
+latency  mean=3.065s  min=2.714  max=3.548
+rpcBytes mean=10.153MB min=9.066 max=11.816
+saved /home/htj/split_bench_r1000d2.csv
+TIER r100d15 rate=100Mbps delay=15ms 09:34:38
+warmed up; measuring 8 images, max_tokens= 24
+airport_s0005002.png             3.98s  rpcB=  9.196MB  ans=airport
+dense_residential_s0005003.p     4.38s  rpcB= 10.114MB  ans=dense residential
+stadium_s0005004.png             4.41s  rpcB= 10.116MB  ans=stadium
+commercial_area_s0005005.png     3.97s  rpcB=  9.196MB  ans=airport
+sparse_residential_s0005006.     5.45s  rpcB= 11.958MB  ans=circular farmland
+chaparral_s0005007.png           4.91s  rpcB= 11.035MB  ans=chaparral
+railway_s0005008.png             4.49s  rpcB= 10.117MB  ans=railway
+basketball_court_s0005009.pn     4.97s  rpcB= 11.037MB  ans=basketball court
+== TAG=r100d15 N=8 maxtok=24
+latency  mean=4.569s  min=3.966  max=5.452
+rpcBytes mean=10.346MB min=9.196 max=11.958
+saved /home/htj/split_bench_r100d15.csv
+TIER r100d2 rate=100Mbps delay=2ms 09:35:24
+warmed up; measuring 8 images, max_tokens= 24
+airport_s0005002.png             2.99s  rpcB=  9.172MB  ans=airport
+dense_residential_s0005003.p     3.28s  rpcB= 10.069MB  ans=dense residential
+stadium_s0005004.png             3.30s  rpcB= 10.065MB  ans=stadium
+commercial_area_s0005005.png     3.00s  rpcB=  9.168MB  ans=airport
+sparse_residential_s0005006.     3.88s  rpcB= 11.840MB  ans=circular farmland
+chaparral_s0005007.png           3.59s  rpcB= 10.930MB  ans=chaparral
+railway_s0005008.png             3.30s  rpcB= 10.065MB  ans=railway
+basketball_court_s0005009.pn     3.58s  rpcB= 10.989MB  ans=basketball court
+== TAG=r100d2 N=8 maxtok=24
+latency  mean=3.365s  min=2.987  max=3.883
+rpcBytes mean=10.287MB min=9.168 max=11.840
+saved /home/htj/split_bench_r100d2.csv
+TIER r100d5 rate=100Mbps delay=5ms 09:35:58
+warmed up; measuring 8 images, max_tokens= 24
+airport_s0005002.png             3.07s  rpcB=  9.195MB  ans=airport
+dense_residential_s0005003.p     3.39s  rpcB= 10.006MB  ans=dense residential
+stadium_s0005004.png             3.39s  rpcB= 10.043MB  ans=stadium
+commercial_area_s0005005.png     3.07s  rpcB=  9.145MB  ans=airport
+sparse_residential_s0005006.     4.05s  rpcB= 11.836MB  ans=circular farmland
+chaparral_s0005007.png           3.70s  rpcB= 10.939MB  ans=chaparral
+railway_s0005008.png             3.39s  rpcB= 10.042MB  ans=railway
+basketball_court_s0005009.pn     3.71s  rpcB= 10.946MB  ans=basketball court
+== TAG=r100d5 N=8 maxtok=24
+latency  mean=3.470s  min=3.066  max=4.048
+rpcBytes mean=10.269MB min=9.145 max=11.836
+saved /home/htj/split_bench_r100d5.csv
+TIER r1000d5 rate=1000Mbps delay=5ms 09:36:33
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             3.02s  rpcB=  9.149MB  ans=airport
+dense_residential_s0005003.p     3.34s  rpcB= 10.010MB  ans=dense residential
+stadium_s0005004.png             3.32s  rpcB= 10.043MB  ans=stadium
+commercial_area_s0005005.png     3.02s  rpcB=  9.150MB  ans=airport
+sparse_residential_s0005006.     3.98s  rpcB= 11.840MB  ans=circular farmland
+chaparral_s0005007.png           3.66s  rpcB= 10.944MB  ans=chaparral
+railway_s0005008.png             3.33s  rpcB= 10.010MB  ans=railway
+basketball_court_s0005009.pn     3.66s  rpcB= 10.943MB  ans=basketball court
+golf_course_s0005010.png         3.64s  rpcB= 10.940MB  ans=golf course
+lake_s0005011.png                3.00s  rpcB=  9.087MB  ans=lake
+== TAG=r1000d5 N=10 maxtok=24
+latency  mean=3.396s  min=3.001  max=3.979
+rpcBytes mean=10.212MB min=9.087 max=11.840
+saved /home/htj/split_bench_r1000d5.csv
+TIER r1000d15 rate=1000Mbps delay=15ms 09:37:14
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             3.94s  rpcB=  9.194MB  ans=airport
+dense_residential_s0005003.p     4.49s  rpcB= 10.117MB  ans=dense residential
+stadium_s0005004.png             4.46s  rpcB= 10.117MB  ans=stadium
+commercial_area_s0005005.png     4.00s  rpcB=  9.197MB  ans=airport
+sparse_residential_s0005006.     5.40s  rpcB= 11.957MB  ans=circular farmland
+chaparral_s0005007.png           4.96s  rpcB= 11.037MB  ans=chaparral
+railway_s0005008.png             4.47s  rpcB= 10.116MB  ans=railway
+basketball_court_s0005009.pn     4.92s  rpcB= 11.034MB  ans=basketball court
+golf_course_s0005010.png         4.90s  rpcB= 11.035MB  ans=golf course
+lake_s0005011.png                3.96s  rpcB=  9.196MB  ans=lake
+== TAG=r1000d15 N=10 maxtok=24
+latency  mean=4.551s  min=3.943  max=5.401
+rpcBytes mean=10.300MB min=9.194 max=11.957
+saved /home/htj/split_bench_r1000d15.csv
+TIER r10000d2 rate=10000Mbps delay=2ms 09:38:09
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             2.75s  rpcB=  9.066MB  ans=airport
+dense_residential_s0005003.p     3.01s  rpcB=  9.963MB  ans=dense residential
+stadium_s0005004.png             3.02s  rpcB= 10.022MB  ans=stadium
+commercial_area_s0005005.png     2.75s  rpcB=  9.125MB  ans=airport
+sparse_residential_s0005006.     3.58s  rpcB= 11.816MB  ans=circular farmland
+chaparral_s0005007.png           3.30s  rpcB= 10.919MB  ans=chaparral
+railway_s0005008.png             3.01s  rpcB= 10.022MB  ans=railway
+basketball_court_s0005009.pn     3.29s  rpcB= 10.919MB  ans=basketball court
+golf_course_s0005010.png         3.29s  rpcB= 10.860MB  ans=golf course
+lake_s0005011.png                2.73s  rpcB=  9.093MB  ans=lake
+== TAG=r10000d2 N=10 maxtok=24
+latency  mean=3.074s  min=2.734  max=3.580
+rpcBytes mean=10.180MB min=9.066 max=11.816
+saved /home/htj/split_bench_r10000d2.csv
+TIER r10000d5 rate=10000Mbps delay=5ms 09:38:46
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             3.01s  rpcB=  9.087MB  ans=airport
+dense_residential_s0005003.p     3.32s  rpcB= 10.088MB  ans=dense residential
+stadium_s0005004.png             3.33s  rpcB= 10.043MB  ans=stadium
+commercial_area_s0005005.png     3.00s  rpcB=  9.149MB  ans=airport
+sparse_residential_s0005006.     3.97s  rpcB= 11.859MB  ans=circular farmland
+chaparral_s0005007.png           3.65s  rpcB= 10.881MB  ans=chaparral
+railway_s0005008.png             3.33s  rpcB= 10.042MB  ans=railway
+basketball_court_s0005009.pn     3.66s  rpcB= 10.943MB  ans=basketball court
+golf_course_s0005010.png         3.59s  rpcB= 10.880MB  ans=golf course
+lake_s0005011.png                3.02s  rpcB=  9.149MB  ans=lake
+== TAG=r10000d5 N=10 maxtok=24
+latency  mean=3.388s  min=3.003  max=3.969
+rpcBytes mean=10.212MB min=9.087 max=11.859
+saved /home/htj/split_bench_r10000d5.csv
+TIER r10000d15 rate=10000Mbps delay=15ms 09:39:27
+warmed up; measuring 10 images, max_tokens= 24
+airport_s0005002.png             4.00s  rpcB=  9.196MB  ans=airport
+dense_residential_s0005003.p     4.42s  rpcB= 10.117MB  ans=dense residential
+stadium_s0005004.png             4.43s  rpcB= 10.113MB  ans=stadium
+commercial_area_s0005005.png     3.91s  rpcB=  9.194MB  ans=airport
+sparse_residential_s0005006.     5.44s  rpcB= 11.958MB  ans=circular farmland
+chaparral_s0005007.png           4.95s  rpcB= 11.014MB  ans=chaparral
+railway_s0005008.png             4.41s  rpcB= 10.115MB  ans=railway
+basketball_court_s0005009.pn     4.92s  rpcB= 11.033MB  ans=basketball court
+golf_course_s0005010.png         4.89s  rpcB= 11.037MB  ans=golf course
+lake_s0005011.png                3.90s  rpcB=  9.194MB  ans=lake
+== TAG=r10000d15 N=10 maxtok=24
+latency  mean=4.526s  min=3.901  max=5.437
+rpcBytes mean=10.297MB min=9.194 max=11.958
+saved /home/htj/split_bench_r10000d15.csv
+SWEEP_DONE 09:40:21

@@ -1,0 +1,2 @@
+model,n_images,accuracy,T_im_mean_s,T_im_p50_s,E_im_mean_J,Ppeak_p95_W
+gemma-3-4b-Q4,500,0.342,11.252169914245606,11.192543625831604,41.048094833395744,6.071

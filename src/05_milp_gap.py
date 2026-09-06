@@ -45,7 +45,8 @@ S_SATS         = 2
 I_SRC          = 2
 SAT_PHASE      = [0, ORBIT // 2]       # staggered eclipse
 P_SOLAR        = 8.0                   # J harvested per sunlit slot
-P_CAP          = 12.0
+P_CAP          = 15.0
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
 B_MAX          = 150.0
 B_INIT         = 100.0
 U_TGT          = 0.50                  # per-slot quality demand (keeps sources hungry)
@@ -53,8 +54,8 @@ RNG_SEED       = 7
 
 # measured standalone configs (Table I)
 CFG = {
-    "3B": dict(Q=0.30, E=5.4,  P=6.6,  N=2),
-    "7B": dict(Q=0.47, E=27.9, P=10.7, N=4),
+    "2B": dict(Q=0.398, E=3.93, P=4.15, N=2),
+    "3B": dict(Q=0.464, E=5.78, P=4.51, N=2),
 }
 MODELS = list(CFG)
 for m in CFG.values():
@@ -124,7 +125,7 @@ def solve_offline(inst):
             e_st = pulp.lpSum(x[s, tp, m, i] * CFG[m]["e_ps"] for (m, i, tp) in occ)
             prob += b[s, t + 1] == b[s, t] + om[s, t] - e_st
             # per-slot peak-power cap
-            prob += pulp.lpSum(x[s, tp, m, i] * CFG[m]["P"] for (m, i, tp) in occ) <= P_CAP
+            prob += pulp.lpSum(x[s, tp, m, i] * CFG[m]["P"] for (m, i, tp) in occ) <= P_CAP - P_BASE
 
     # max-min: U <= total delivered quality to every source
     for i in range(I_SRC):
@@ -159,7 +160,7 @@ def run_online(V, inst):
         for s in free:
             for m in MODELS:
                 c = CFG[m]
-                if c["P"] > P_CAP:
+                if P_BASE + c["P"] > P_CAP:
                     continue
                 if c["e_ps"] > b[s] + om[s]:        # battery feasibility
                     continue
@@ -182,13 +183,13 @@ def run_online(V, inst):
         for s in range(S_SATS):
             if t <= busy_until[s]:
                 e_t[s] = run_e[s]; p_t[s] = run_p[s]
-            if p_t[s] > P_CAP + 1e-9:
+            if P_BASE + p_t[s] > P_CAP + 1e-9:
                 pcap_viol += 1
         for s in range(S_SATS):
             b[s] = min(max(0.0, b[s] + om[s] - e_t[s]), B_MAX)
 
         QE = np.maximum(QE + e_t - om, 0.0)
-        QP = np.maximum(QP + p_t - P_CAP, 0.0)
+        QP = np.maximum(QP + (P_BASE + p_t) - P_CAP, 0.0)
         QU = np.maximum(QU + U_TGT - q_credit, 0.0)
 
     return dict(min_quality=float(delivered.min()),
@@ -261,7 +262,7 @@ def main():
     ax[0].set_xscale("log")
     ax[0].set_xlabel(r"control parameter $V$")
     ax[0].set_ylabel(r"online min-quality $/\ U^\star$")
-    ax[0].set_title(rf"(a) Online approaches optimum (mean over {N_INSTANCES} instances)")
+    ax[0].set_title("(a)", loc="left")
     ax[0].legend(loc="lower right")
     # (b) normalized gap vs V with c/V reference fitted to the largest-V point
     ax[1].plot(Varr, gaps, "o-", color=PALETTE["blue_main"], lw=2.5, ms=7,
@@ -274,7 +275,7 @@ def main():
     ax[1].set_ylim(0, float(gaps.max()) * 1.15)   # keep on data scale; 1/V guide visible in decay region
     ax[1].set_xlabel(r"control parameter $V$")
     ax[1].set_ylabel(r"$(U^\star-$online$)\,/\,U^\star$")
-    ax[1].set_title("(b) Gap shrinks with $V$ (large-$V$: $O(1/V)$)")
+    ax[1].set_title("(b)", loc="left")
     ax[1].legend(loc="upper right")
     savefig_pub(fig, "milp_gap.pdf")
     fig.savefig("milp_gap.png", dpi=130)

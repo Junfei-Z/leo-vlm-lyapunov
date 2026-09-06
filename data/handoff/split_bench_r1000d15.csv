@@ -1,0 +1,11 @@
+img,true,answer,latency_s,rpc_bytes
+airport_s0005002.png,airport,airport,3.9432754516601562,9194419
+dense_residential_s0005003.png,dense_residential,dense residential,4.490208625793457,10117106
+stadium_s0005004.png,stadium,stadium,4.46003532409668,10116518
+commercial_area_s0005005.png,commercial_area,airport,3.9998533725738525,9196759
+sparse_residential_s0005006.png,sparse_residential,circular farmland,5.401386260986328,11956742
+chaparral_s0005007.png,chaparral,chaparral,4.963308095932007,11037187
+railway_s0005008.png,railway,railway,4.467836380004883,10115968
+basketball_court_s0005009.png,basketball_court,basketball court,4.9234395027160645,11034127
+golf_course_s0005010.png,golf_course,golf course,4.904433965682983,11035314
+lake_s0005011.png,lake,lake,3.9594128131866455,9195764

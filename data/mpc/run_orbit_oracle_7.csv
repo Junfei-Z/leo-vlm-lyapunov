@@ -1,0 +1,2 @@
+W,tier,seed,down_pct,min_fill,splits,totQ,service,pkv,n_solves,solve_mean_s,solve_max_s,no_incumbent,run_wall_s
+orbit,oracle,7,1.591,0.2596,1227,3947.5,0.51,0,285,1.13,12.01,0,647.1

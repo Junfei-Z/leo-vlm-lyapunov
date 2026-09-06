@@ -1,0 +1,2 @@
+model,dataset,n_images,accuracy,T_im_mean_s,T_im_p50_s,E_im_mean_J,Ppeak_p95_W
+SmolVLM2-2.2B-Q4,RESISC45_full,1300,0.31,1.8052501423542315,1.7912180423736572,5.3779818510459805,4.1055

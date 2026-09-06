@@ -1,0 +1,2 @@
+W,tier,seed,down_pct,min_fill,splits,totQ,service,pkv,n_solves,solve_mean_s,solve_max_s,no_incumbent,run_wall_s
+eclipse,realtime,10,1.591,0.1725,1738,2281.8,0.2938,0,285,0.34,2.2,0,195.1

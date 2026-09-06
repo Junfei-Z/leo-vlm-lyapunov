@@ -1,0 +1,82 @@
+\subsection{Sensitivity Analysis}\label{EV_SENS}
+We sweep the scenario parameters one at a time around the mainline point, each
+value over 10 seeds (Fig.~\ref{fig:sens}).
+
+The platform-baseline sweep exposes the 7B feasibility boundary: the split is
+feasible only while $P_{\text{base}} + 6.37 \le 15$\,W, below about 8.6\,W. At
+6\,W every policy is comfortable and Greedy-Q dominates min-fill while
+deployable; at the nominal 7\,W the regime is tight; at 8\,W all policies
+degrade and beyond 9\,W the platform load alone is unsustainable (the
+${\approx}7.8$\,W orbit-average harvest is exceeded) and every policy
+collapses. The battery sweep bounds the scope of the safety separation on the
+real trace: Greedy-Q is undeployable across the entire studied range
+($\ge 6.9\%$ for $B^{\max}\!\in\![14,22]$\,kJ), the strict three-in/two-out
+partition holds for $B^{\max}\!\in\![16.6, 17.5]$\,kJ, and Random becomes
+deployable and overtakes on min-fill from ${\sim}19$\,kJ (0.313 versus 0.214),
+the energy-abundant regime of the limitations discussion. The panel sweep
+shows the same story from the supply side (partition on $[12.2, 13]$\,W;
+sustainability floor near 11\,W). Under overload the proposed scheduler's
+downtime stays flat at 1.6\% up to a 0.7 arrival probability while every
+policy's min-fill falls. At the mainline point the idle decomposition
+attributes the scheduler's conservatism as 2306 reserve-guard blocks and 2661
+score idles of 7961 decision slots: under simultaneous eclipse the guard of
+Remark~\ref{rem_reserve} is the dominant term, the mechanism behind the
+compressed $V$ range of Table~\ref{tab_split}.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{tleP_sensitivity.pdf}
+\caption{One-at-a-time sweeps on the TLE mainline (10-seed means, $\pm1$ std).
+Top: downtime against the 5\% SLA (dashed). Bottom: min-fill. The battery
+panel shows the boundary of the safety separation honestly: with a generous
+battery the reckless splitters no longer black out and Random overtakes.}
+\label{fig:sens}
+\end{figure*}
+
+\subsection{Dynamic ISL Topology}\label{EV_ISL}
+To stress the handoff constraint~\eqref{C_pipe_isl} beyond the always-connected
+chain, we degrade link availability with a per-window duty cycle
+$p_{\text{ISL}}$ on top of the real geometry (Fig.~\ref{fig:isl}). As
+availability falls from 1.0 to 0.3 the split count falls from 655 to 333 and
+min-fill from 0.176 to 0.113. The coupling has a verified linear structure:
+the loss concentrates entirely on the 7B-dependent source in every setting
+(all other sources rise slightly as standalone capacity flows back), and the
+fill loss per lost split is the same constant (0.020 per 100 splits) on the
+mainline and on the cross-plane contrast schedule; the larger mainline drop is
+therefore not a different mechanism but four times more lost splits, because
+the source is served almost entirely through splits concentrated in the
+guard-allowed windows, which leave no rerouting slack. A superlinear
+window-intersection mechanism we had hypothesized is rejected by this
+constant-slope structure.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{tleP_isl.pdf}
+\caption{ISL availability degradation on the mainline: (a) feasible splits
+fall, so \eqref{C_pipe_isl} binds; (b) the loss lands on min-fill through the
+7B-dependent source, linearly in the lost splits.}
+\label{fig:isl}
+\end{figure}
+
+\subsection{Stability Stress Tests}\label{EV_STAB}
+A twenty-orbit run probes the guarantees on the real trace
+(Fig.~\ref{fig:stab20}). The battery settles into a periodic cycle and the
+virtual queues remain mean-rate stable ($Q^E(T)/T \to 1.6\times10^{-3}$,
+$Q^U(T)/T \to 7.9\times10^{-3}$; blackout 0.24\% of satellite-slots). The
+backlogs are larger than on the staggered contrast schedule (peak mean
+backlogs 239 and 950 versus 86 and 192): this is the ISS bound of
+Theorem~\ref{thm_robust} responding to the longer uninterrupted
+positive-drift interval of simultaneous eclipse, not a departure from it --
+the disturbance is larger, so the stability bound is larger, and the queues
+remain sublinear throughout.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{tleP_stability.pdf}
+\caption{Twenty-orbit run on the mainline (proposed, $V{=}10$): periodic
+battery cycle and mean-rate-stable virtual queues; the larger backlogs are
+the ISS bound under simultaneous eclipse (Theorems~\ref{thm_stable}
+and~\ref{thm_robust}).}
+\label{fig:stab20}
+\end{figure}
+

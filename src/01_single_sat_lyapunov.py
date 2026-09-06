@@ -49,9 +49,9 @@ HORIZON = N_ORBITS * N_SLOTS_PER_ORBIT                 # total slots |T|
 # =============================================================================
 # Each config m: T_im (-> N_im = ceil(T/tau)), E_im (J), Ppeak (W), Q (quality)
 CONFIGS = {
-    "3B": dict(T=1.32, E=5.4,  Ppeak=6.6,  Q=0.30),
-    "7B": dict(T=3.89, E=27.9, Ppeak=10.7, Q=0.47),
-    "8B": dict(T=8.66, E=62.8, Ppeak=11.0, Q=0.51),
+    "2B": dict(T=1.24, E=3.93, Ppeak=4.15, Q=0.398),
+    "3B": dict(T=1.74, E=5.78, Ppeak=4.51, Q=0.464),
+    "7B": dict(T=2.76, E=9.13, Ppeak=5.57, Q=0.573),
 }
 for m in CONFIGS.values():
     m["N"] = int(np.ceil(m["T"] / TAU))   # N_im : number of slots per inference
@@ -63,7 +63,8 @@ CONFIG_NAMES = list(CONFIGS.keys())
 #    Chosen so that eclipse creates real pressure but the system survives.
 # =============================================================================
 P_CAP   = 15.0     # instantaneous power cap [W]  (above 8B's 11W -> binding-ish)
-P_SOLAR = 9.0      # solar charging power when sunlit [W]  (covers avg, not peak)
+P_BASE  = 9.0      # platform baseline draw (sensing+comms+ADCS); shares the bus
+P_SOLAR = 3.0      # W: small panel, energy-balanced for the single-sat 3-source load
 B_MAX   = 30000.0  # battery capacity [J]  (enough to ride through an eclipse)
 B_INIT  = 0.6 * B_MAX
 
@@ -91,7 +92,7 @@ def sunlit_indicator(t):
     return 1 if phase < N_SUNLIT else 0
 
 
-def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
+def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False, greedy=False):
     rng = np.random.default_rng(seed)
 
     # --- state ---
@@ -157,7 +158,7 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
 
                     # ---- HARD constraints (must hold every slot) ----
                     # peak power cap:
-                    if p_peak > P_CAP:
+                    if P_BASE + p_peak > P_CAP:
                         continue
                     # battery feasibility (this slot's energy <= available):
                     if e_per_slot > b + omega:
@@ -176,8 +177,19 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
                         best_score = score
                         best_choice = (i, mname)
 
+            # Greedy-Q baseline: always run the highest-quality feasible config,
+            # ignoring energy sustainability (no drift-plus-penalty, no idle gate).
+            if greedy:
+                feas = [mn for mn in CONFIG_NAMES
+                        if P_BASE + CONFIGS[mn]["Ppeak"] <= P_CAP
+                        and CONFIGS[mn]["E"] / CONFIGS[mn]["N"] <= b + omega]
+                best_choice = (pending[0], max(feas, key=lambda k: CONFIGS[k]["Q"])) \
+                    if (pending and feas) else None
+                do_commit = best_choice is not None
+            else:
+                do_commit = (best_choice is not None) and (best_score < 0)
             # also consider doing NOTHING (idle) -> score 0
-            if (best_choice is not None) and (best_score < 0):
+            if do_commit:
                 i, mname = best_choice
                 m = CONFIGS[mname]
                 chosen = (i, mname)
@@ -195,7 +207,7 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
             p_t = running_P
 
         # ---- HARD peak-power check (safety; should never trigger) ----
-        if p_t > P_CAP + 1e-9:
+        if P_BASE + p_t > P_CAP + 1e-9:
             pcap_viol = 1
             pcap_violations += 1
 
@@ -206,7 +218,7 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
         # energy queue: Q^E(t+1) = max(Q^E + e - omega, 0)
         QE = max(QE + e_t - omega, 0.0)
         # power queue: Q^P(t+1) = max(Q^P + p - Pcap, 0)
-        QP = max(QP + p_t - P_CAP, 0.0)
+        QP = max(QP + (P_BASE + p_t) - P_CAP, 0.0)
         # quality queue per source: Q^U_i = max(Q^U_i + a_i*U_tgt - q_i, 0)
         QU = np.maximum(QU + arrivals * U_TGT - q_t, 0.0)
 
@@ -246,8 +258,9 @@ def run_sim(V=V_DEFAULT, horizon=HORIZON, seed=RNG_SEED, verbose=False):
 # =============================================================================
 # 5. PLOTS  (the evidence for queue stability + eclipse robustness)
 # =============================================================================
-def plot_timeseries(res, fname="sim_timeseries.png"):
+def plot_timeseries(res, res_gq=None, fname="sim_timeseries.png"):
     log = res["log"]
+    gq = res_gq["log"] if res_gq is not None else None
     t = np.array(log["t"]) * TAU / 60.0   # minutes
     delta = np.array(log["delta"])
 
@@ -267,27 +280,33 @@ def plot_timeseries(res, fname="sim_timeseries.png"):
 
     # (a) battery
     shade(ax[0])
-    ax[0].plot(t, np.array(log["battery"]) / 1000.0, color="tab:green")
+    ax[0].plot(t, np.array(log["battery"]) / 1000.0, color=PALETTE["blue_main"], lw=2.0, label="Proposed")
+    if gq is not None:
+        ax[0].plot(t, np.array(gq["battery"]) / 1000.0, color=PALETTE["red_strong"], lw=2.0, ls="--", label="Greedy-Q")
+        ax[0].legend(loc="lower right", fontsize=11)
     ax[0].set_ylabel("Battery [kJ]")
-    ax[0].set_title("(a) Battery level  (shaded = eclipse)")
+    ax[0].set_title("(a) Battery (shaded = eclipse)", loc="left")
 
     # (b) energy virtual queue
     shade(ax[1])
-    ax[1].plot(t, log["QE"], color="tab:red")
+    ax[1].plot(t, log["QE"], color=PALETTE["blue_main"], lw=2.0, label="Proposed")
+    if gq is not None:
+        ax[1].plot(t, gq["QE"], color=PALETTE["red_strong"], lw=2.0, ls="--", label="Greedy-Q")
+        ax[1].legend(loc="upper left", fontsize=11)
     ax[1].set_ylabel(r"$Q^E(t)$")
-    ax[1].set_title("(b) Energy virtual queue  (rises in eclipse, recovers in sunlight)")
+    ax[1].set_title("(b) Energy queue $Q^E(t)$", loc="left")
 
     # (c) power virtual queue + peak power
     shade(ax[2])
     ax[2].plot(t, log["QP"], color="tab:purple", label=r"$Q^P(t)$")
     ax[2].set_ylabel(r"$Q^P(t)$")
-    ax[2].set_title("(c) Power virtual queue  (stays ~0 -> peak cap respected)")
+    ax[2].set_title("(c) Power queue $Q^P(t)$", loc="left")
 
     # (d) quality deficit queue (mean over sources)
     shade(ax[3])
     ax[3].plot(t, log["QU_mean"], color="tab:blue")
     ax[3].set_ylabel(r"mean $Q^U_i(t)$")
-    ax[3].set_title("(d) Quality deficit queue (mean over sources)")
+    ax[3].set_title("(d) Quality-deficit queue", loc="left")
     ax[3].set_xlabel("Time [min]")
 
     for a in ax:
@@ -314,7 +333,7 @@ def plot_V_tradeoff(Vs, fname="sim_V_tradeoff.png"):
     ax2.plot(Vs, qe, "s--", color="tab:red", label="avg energy queue backlog")
     ax2.set_ylabel("avg $Q^E$ backlog", color="tab:red")
     ax2.tick_params(axis="y", labelcolor="tab:red")
-    ax1.set_title("[O(1/V), O(V)] trade-off:  larger V -> more quality, larger backlog")
+    ax1.set_title("")
     ax1.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(fname, dpi=130)
@@ -347,6 +366,7 @@ if __name__ == "__main__":
           f"{res['min_quality_rate']:.3f} / {res['mean_quality_rate']:.3f}")
     print("-" * 64)
 
-    plot_timeseries(res)
+    res_gq = run_sim(V=V_DEFAULT, greedy=True)   # Greedy-Q baseline for the Fig-4 overlay
+    plot_timeseries(res, res_gq)
     plot_V_tradeoff([5, 10, 20, 50, 100, 200])
     print("Done.")

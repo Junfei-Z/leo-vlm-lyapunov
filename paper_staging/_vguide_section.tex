@@ -1,0 +1,28 @@
+% V-selection guideline subsection draft (P1). Synthesizes three measured
+% V-sweeps: TLE mainline (tleP_core V=1/10/100), synthetic contrast frontier
+% (contrast_frontier.csv V=1..300), 45-source (src45_servable V=1/10/100).
+% All numbers measured Q_SRC.
+
+\subsection{Choosing the Lyapunov Weight in Practice}\label{EV_VGUIDE}
+The three $V$-sweeps of this evaluation compose into an operational
+guideline. The theory bounds only total quality (Theorem~\ref{thm_gap}:
+$O(1/V)$ gap), so $V$ buys throughput; what it costs depends on the energy
+regime, and the evaluation measured both sides. Under phase diversity (the
+contrast schedule) the $V$-knob traces a genuine frontier -- total quality
+3565 to 4168 against min-fill 0.244 down to 0.159 over $V \in [1, 300]$ --
+and the choice is a real trade with the knee near $V \approx 30$ (min-fill
+still 0.226 at 93\% of the throughput span). Under simultaneous eclipse (the
+TLE mainline) the reserve guard dominates the idle budget and compresses the
+navigable range: $V \in [1, 100]$ moves total quality by under 4\% (2145 to
+2224) and min-fill by 0.011 -- the knob barely matters, and $V$ should
+simply be small. At fine source granularity the cost side steepens: on 45
+classes, raising $V$ from 10 to 100 buys 15\% total quality (1580 to 1814)
+but pushes one additional servable class below the starvation line
+(servable-set min-fill 0.058 to 0.048, starved count 8 to 9) -- with many
+weak sources, throughput is bought in units of individual classes going
+dark. The guideline: identify the regime first. If the constellation
+geometry forces simultaneous eclipse, the guard governs and $V$ is
+second-order; when phase diversity gives the scheduler room, set $V$ at the
+frontier knee if sources are few and coarse, and back it off toward the
+fairness end as the source set grows finer, watching the servable-set
+starvation count rather than aggregate quality.

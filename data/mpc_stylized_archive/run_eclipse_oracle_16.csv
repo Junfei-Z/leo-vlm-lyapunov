@@ -1,0 +1,2 @@
+W,tier,seed,down_pct,min_fill,splits,totQ,service,pkv,n_solves,solve_mean_s,solve_max_s,no_incumbent,run_wall_s
+eclipse,oracle,16,1.591,0.174,1728,2293.2,0.2985,0,285,0.43,33.67,0,219.0

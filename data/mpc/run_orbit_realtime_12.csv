@@ -1,0 +1,2 @@
+W,tier,seed,down_pct,min_fill,splits,totQ,service,pkv,n_solves,solve_mean_s,solve_max_s,no_incumbent,run_wall_s
+orbit,realtime,12,1.591,0.2704,1194,3995.2,0.5124,0,285,1.09,10.85,0,661.6

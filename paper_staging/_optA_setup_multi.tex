@@ -1,0 +1,97 @@
+\subsection{Simulation Setup}\label{EV_SETUP}
+The mainline experiments run on traces propagated from a public Starlink TLE
+snapshot (SGP4, 550\,km shell, 1\,s steps, three orbits). A physically gated
+pipeline selects four truly co-orbiting satellites of one plane (neighbor
+ranges ${\sim}1800$\,km, stable over the window; neighbor ISL availability
+1.0) from the deepest-eclipse plane that admits a connected chain; the gate
+checks the orbital period (95.6\,min), the sunlit fraction (0.639), and chain
+connectivity before any scheduling runs. Two structural facts of the real
+geometry shape everything downstream. First, intra-plane phase staggering and
+ISL connectivity are mutually exclusive: satellites a quarter-orbit apart are
+${\sim}12{,}000$\,km apart with Earth in between, so a physically consistent
+single-plane chain consists of adjacent satellites, and eclipse then hits the
+whole chain nearly simultaneously. Any design that assumes a sunlit neighbor
+is always available inherits an assumption that does not hold within a plane.
+Second, a staggered-eclipse schedule is therefore an approximation of a
+cross-plane deployment; we retain one as a controlled contrast
+(Section~\ref{EV_VCONF}), where the links crossing planes are exactly the
+intermittent ones (Section~\ref{EV_ISL}).
+
+Six sensing sources carry heterogeneous quality profiles taken from the
+per-category RESISC45 measurements. The platform baseline
+($P_{\text{base}}{=}7$\,W, nominal in the reported 3--10\,W CubeSat range,
+swept in Section~\ref{EV_SENS}) draws from the battery every slot; the panel
+and battery are sized by fixed rules applied to the trace (panel =
+sustainability floor $\times1.114 = 12.2$\,W; battery = eclipse need
+$\times1.128 = 16.6$\,kJ). The split timing accounts for the measured handoff
+of Section~\ref{EV_HANDOFF}: we adopt the far-neighbor end of the measured
+chain ($0.69$\,s at 6\,ms one-way, extrapolated from the fitted round-trip
+model) as the primary value, the conservative choice within the intra-plane
+band; the $0.25$--$0.60$\,s band ends are absorbed by the front-window slack
+and leave every number unchanged. Per-stage split energies are the measured
+values of Section~\ref{EV_HANDOFF}. All policies draw from one shared feasible
+set (the split included, the ISL handoff check, the per-slot energy check, and
+the peak check), so they differ only in the selection rule; quality ties are
+broken uniformly at random. Results are means over 10 seeds. The simulation
+uses a serial scheduling implementation that commits one decision per slot,
+corresponding to a centralized executor in which a lead satellite collects
+state and broadcasts the decision; the abstraction is identical for every
+policy, and the formulation itself admits concurrent execution, of which the
+serial implementation is a conservative special case. We report min-fill (the
+per-source delivered quality normalized by expected arrivals, minimum across
+sources: the empirical max-min objective), downtime (the fraction of
+satellite-slots spent in blackout recovery), the service rate (started tasks
+over arrivals), the split count, and total delivered quality.
+
+We compare against four baselines. Greedy-Q takes the highest-quality feasible
+action, reaching for the 7B split whenever two satellites are free. Greedy-E
+takes the cheapest feasible action. Random selects uniformly at random from
+the feasible set. Static runs a fixed 3B standalone configuration on the
+highest-battery satellite. We treat the offline MILP solely as a clairvoyant
+upper bound for the optimality-gap study (Section~\ref{EV_GAP}): it is
+non-causal and intractable at constellation scale.
+
+\subsection{Mainline Comparison on the Real Trace}\label{EV_MULTI}
+Table~\ref{tab_split} reports the four-satellite comparison on the TLE
+mainline. The proposed scheduler is the only deployable policy that runs the
+split: it holds downtime at 1.6\% while running ${\sim}655$ splits, whereas
+the two other deployable policies (Greedy-E at 2.4\% and Static at 3.2\%)
+never split, and among the deployable policies it is highest on min-fill
+(0.176 versus 0.154 and 0.117). The policies that reach higher min-fill
+(Greedy-Q at 0.359, Random at 0.307) do so only by blacking out (8.4\% and
+6.2\% downtime), violating the uptime service-level agreement (SLA); the
+deployability partition is invariant for any SLA threshold in the band
+$(3.2\%, 6.2\%)$. No policy reaches high fairness and high throughput while
+remaining deployable, the quality-fairness conflict of
+Section~\ref{EV_VCONF}. The three $V$ rows of Table~\ref{tab_split} are
+nearly identical (min-fill 0.177 to 0.170): under simultaneous eclipse the
+reserve guard of Remark~\ref{rem_reserve} dominates the per-slot decision and
+compresses the $V$-navigable range; Section~\ref{EV_VCONF} shows the same
+scheduler navigating a wide fairness-throughput frontier when eclipse-phase
+diversity exists. Static reaches higher raw throughput (5059) at low fairness;
+the proposed scheduler trades this throughput for deployable top-tier service.
+
+\begin{table}[!t]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{\label{tab_split}Four-satellite comparison on the TLE mainline (three
+orbits, 10-seed means; std below 0.006 for min-fill and 0.2\,pp for downtime).
+All policies draw from the same feasible set. The near-identical $V$ rows are
+the compressed navigable range under simultaneous eclipse
+(Section~\ref{EV_VCONF}). Downtime above the SLA marks a policy undeployable.}
+\begin{tabular}{lcccccc}
+\toprule
+Policy & \makecell{Peak\\viol.} & \makecell{Down\\time} & \makecell{Serv.\\rate} & \makecell{7B\\splits} & \makecell{Min-\\fill} & \makecell{Total\\qual.} \\
+\midrule
+Proposed ($V{=}1$)   & 0 & 1.6\% & 0.291 & $656$ & $\mathbf{0.177}$ & $2101$ \\
+Proposed ($V{=}10$)  & 0 & 1.6\% & 0.292 & $655$ & $0.176$ & $2108$ \\
+Proposed ($V{=}100$) & 0 & 1.6\% & 0.298 & $632$ & $0.170$ & $2171$ \\
+\midrule
+Greedy-Q & 0 & \textbf{8.4\%} & 0.706 & 4148 & 0.359 & 5482 \\
+Greedy-E & 0 & 2.4\% & 0.776 & 0 & 0.154 & 3178 \\
+Random   & 0 & \textbf{6.2\%} & 0.754 & 2664 & 0.307 & 4711 \\
+Static   & 0 & 3.2\% & 0.776 & 0 & 0.117 & 5059 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
